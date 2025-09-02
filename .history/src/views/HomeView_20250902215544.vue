@@ -33,14 +33,8 @@ let tempMarker: any = null;
 
 // Charger les lieux au démarrage
 onMounted(async () => {
-  try {
-    const data = await loadFromFirestore();
-    lieux.value = data as any[];
-    console.log("Lieux chargés:", lieux.value.length);
-  } catch (error) {
-    console.error("Erreur lors du chargement initial:", error);
-    // Continuer sans données si erreur
-  }
+  const data = await loadFromFirestore();
+  lieux.value = data as any[];
   initMap();
 });
 
@@ -48,33 +42,26 @@ const initMap = async () => {
   if (currentView.value === "carte") {
     await nextTick();
 
-    // Nettoyer la carte existante proprement
     if (map.value) {
-      map.value.off(); // Supprimer tous les event listeners
       map.value.remove();
-      map.value = null;
     }
 
     setTimeout(() => {
-      try {
-        map.value = L.map("map").setView([48.8566, 2.3522], 12);
+      map.value = L.map("map").setView([48.8566, 2.3522], 12);
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(map.value);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map.value);
 
-        // Ajouter les marqueurs existants
-        lieux.value.forEach((lieu) => {
-          addExistingMarker(lieu);
-        });
+      // Ajouter les marqueurs existants
+      lieux.value.forEach((lieu) => {
+        addExistingMarker(lieu);
+      });
 
-        // Écouter les clics sur la carte
-        map.value.on("click", onMapClick);
-      } catch (error) {
-        console.error("Erreur lors de l'initialisation de la carte:", error);
-      }
-    }, 150);
+      // Écouter les clics sur la carte
+      map.value.on("click", onMapClick);
+    }, 100);
   }
 };
 
@@ -119,28 +106,14 @@ const saveNewMarker = async () => {
     return;
   }
 
-  // Afficher un indicateur de chargement
-  const saveBtn = document.querySelector(".save-btn") as HTMLButtonElement;
-  if (saveBtn) {
-    saveBtn.disabled = true;
-    saveBtn.textContent = "⏳ Sauvegarde...";
-  }
-
   const nouveauLieu = {
-    nom: formData.value.nom.trim(),
-    description: formData.value.description.trim(),
+    nom: formData.value.nom,
+    description: formData.value.description,
     lat: formData.value.lat,
     lng: formData.value.lng,
-    createdAt: new Date().toISOString(),
   };
 
   const id = await saveToFirestore(nouveauLieu);
-
-  // Restaurer le bouton
-  if (saveBtn) {
-    saveBtn.disabled = false;
-    saveBtn.textContent = "💾 Sauvegarder";
-  }
 
   if (id) {
     // Ajouter à la liste locale
@@ -160,8 +133,6 @@ const saveNewMarker = async () => {
 
     // Réinitialiser le formulaire
     formData.value = { nom: "", description: "", lat: 0, lng: 0 };
-
-    console.log("Lieu ajouté avec succès!");
   }
 };
 

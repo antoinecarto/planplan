@@ -5,7 +5,7 @@ import {
   saveToFirestore,
   loadFromFirestore,
   deleteFromFirestore,
-} from "@/firebase";
+} from "./firebase";
 
 const map = ref<any>(null);
 const currentView = ref<"carte" | "liste">("carte");
