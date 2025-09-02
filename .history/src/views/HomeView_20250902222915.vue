@@ -39,10 +39,6 @@ const formatDateTime = (dateString: string) => {
   });
 };
 
-// Dans la section script setup, après la déclaration du store
-console.log("lieuxStore:", lieuxStore);
-console.log("addLieu:", lieuxStore.addLieu);
-
 // Charger les lieux au démarrage
 onMounted(async () => {
   await lieuxStore.loadLieux();
