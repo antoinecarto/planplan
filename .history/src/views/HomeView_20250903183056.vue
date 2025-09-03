@@ -514,11 +514,11 @@ const clearSearch = () => {
         <div v-else class="lieux-list">
           <div class="lieu-item" v-for="lieu in lieuxFiltres" :key="lieu.id">
             <div class="lieu-header">
-              <h3 class="lieu-nom" @click.stop="goToLieuOnMap(lieu)">
+              <h3 class="lieu-nom" @click="goToLieuOnMap(lieu)">
                 {{ lieu.nom }}
               </h3>
               <button
-                @click.stop="deleteLieuFromList(lieu.id)"
+                @click="deleteLieuFromList(lieu.id)"
                 class="delete-btn-list"
                 :disabled="lieuxStore.loading"
               >
@@ -529,12 +529,12 @@ const clearSearch = () => {
             <p
               v-if="lieu.description"
               class="lieu-description"
-              @click.stop="goToLieuOnMap(lieu)"
+              @click="goToLieuOnMap(lieu)"
             >
               {{ lieu.description }}
             </p>
 
-            <div class="lieu-meta" @click.stop="goToLieuOnMap(lieu)">
+            <div class="lieu-meta" @click="goToLieuOnMap(lieu)">
               <div class="meta-item">
                 📍 {{ lieu.lat.toFixed(4) }}, {{ lieu.lng.toFixed(4) }}
               </div>
@@ -547,7 +547,7 @@ const clearSearch = () => {
             </div>
 
             <!-- Indicateur visuel que l'élément est cliquable -->
-            <div class="lieu-click-indicator" @click.stop="goToLieuOnMap(lieu)">
+            <div class="lieu-click-indicator">
               <span class="click-text">👆 Cliquer pour voir sur la carte</span>
               <span class="click-arrow">🗺️</span>
             </div>

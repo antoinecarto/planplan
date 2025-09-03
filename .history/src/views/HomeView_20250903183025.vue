@@ -49,12 +49,11 @@ const lieuxFiltres = computed(() => {
   if (!searchQuery.value.trim()) {
     return lieuxStore.lieuxParDate;
   }
-
+  
   const query = searchQuery.value.toLowerCase().trim();
-  return lieuxStore.lieuxParDate.filter(
-    (lieu) =>
-      lieu.nom.toLowerCase().includes(query) ||
-      (lieu.description && lieu.description.toLowerCase().includes(query))
+  return lieuxStore.lieuxParDate.filter(lieu => 
+    lieu.nom.toLowerCase().includes(query) || 
+    (lieu.description && lieu.description.toLowerCase().includes(query))
   );
 });
 
@@ -169,41 +168,38 @@ const centerOnUserLocation = () => {
   navigator.geolocation.getCurrentPosition(
     (position) => {
       const { latitude, longitude } = position.coords;
-
+      
       if (map.value) {
         // Centrer la carte sur la position de l'utilisateur
         map.value.setView([latitude, longitude], 16);
-
+        
         // Supprimer l'ancien marqueur de position utilisateur s'il existe
         if (userLocationMarker.value) {
           map.value.removeLayer(userLocationMarker.value);
         }
-
+        
         // Créer un marqueur spécial pour la position de l'utilisateur
         const userIcon = L.divIcon({
           html: '<div style="background: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
-          className: "user-location-marker",
+          className: 'user-location-marker',
           iconSize: [22, 22],
-          iconAnchor: [11, 11],
+          iconAnchor: [11, 11]
         });
-
-        userLocationMarker.value = L.marker([latitude, longitude], {
-          icon: userIcon,
-        })
+        
+        userLocationMarker.value = L.marker([latitude, longitude], { icon: userIcon })
           .addTo(map.value)
           .bindPopup("📍 Votre position actuelle");
       }
-
+      
       isLocating.value = false;
     },
     (error) => {
       console.error("Erreur de géolocalisation:", error);
       let message = "Impossible d'obtenir votre position";
-
-      switch (error.code) {
+      
+      switch(error.code) {
         case error.PERMISSION_DENIED:
-          message =
-            "Géolocalisation refusée. Veuillez autoriser l'accès à votre position.";
+          message = "Géolocalisation refusée. Veuillez autoriser l'accès à votre position.";
           break;
         case error.POSITION_UNAVAILABLE:
           message = "Position non disponible";
@@ -212,14 +208,14 @@ const centerOnUserLocation = () => {
           message = "Délai d'attente dépassé pour la géolocalisation";
           break;
       }
-
+      
       alert(message);
       isLocating.value = false;
     },
     {
       enableHighAccuracy: true,
       timeout: 10000,
-      maximumAge: 60000,
+      maximumAge: 60000
     }
   );
 };
@@ -324,22 +320,19 @@ const switchToList = () => {
 const goToLieuOnMap = (lieu: any) => {
   // Passer en vue carte
   currentView.value = "carte";
-
+  
   // Attendre que la carte soit initialisée puis centrer sur le lieu
   setTimeout(async () => {
     await initMap();
     setTimeout(() => {
       if (map.value) {
         map.value.setView([lieu.lat, lieu.lng], 16);
-
+        
         // Trouver et ouvrir le popup du marqueur correspondant
         map.value.eachLayer((layer: any) => {
           if (layer instanceof L.Marker) {
             const latLng = layer.getLatLng();
-            if (
-              Math.abs(latLng.lat - lieu.lat) < 0.00001 &&
-              Math.abs(latLng.lng - lieu.lng) < 0.00001
-            ) {
+            if (Math.abs(latLng.lat - lieu.lat) < 0.00001 && Math.abs(latLng.lng - lieu.lng) < 0.00001) {
               layer.openPopup();
             }
           }
@@ -377,7 +370,7 @@ const clearSearch = () => {
         <div id="map" class="map-container"></div>
 
         <!-- Bouton de géolocalisation -->
-        <button
+        <button 
           @click="centerOnUserLocation"
           :disabled="isLocating"
           class="location-btn"
@@ -464,7 +457,7 @@ const clearSearch = () => {
               lieuxStore.lieuxCount > 1 ? "x" : ""
             }}
           </div>
-
+          
           <!-- Barre de recherche -->
           <div class="search-container">
             <div class="search-input-container">
@@ -499,10 +492,7 @@ const clearSearch = () => {
           </p>
         </div>
 
-        <div
-          v-else-if="lieuxFiltres.length === 0 && searchQuery"
-          class="empty-state"
-        >
+        <div v-else-if="lieuxFiltres.length === 0 && searchQuery" class="empty-state">
           <div class="empty-icon">🔍</div>
           <h3>Aucun résultat</h3>
           <p>Aucun lieu ne correspond à votre recherche "{{ searchQuery }}"</p>
@@ -512,13 +502,15 @@ const clearSearch = () => {
         </div>
 
         <div v-else class="lieux-list">
-          <div class="lieu-item" v-for="lieu in lieuxFiltres" :key="lieu.id">
+          <div
+            class="lieu-item"
+            v-for="lieu in lieuxFiltres"
+            :key="lieu.id"
+          >
             <div class="lieu-header">
-              <h3 class="lieu-nom" @click.stop="goToLieuOnMap(lieu)">
-                {{ lieu.nom }}
-              </h3>
+              <h3 class="lieu-nom" @click="goToLieuOnMap(lieu)">{{ lieu.nom }}</h3>
               <button
-                @click.stop="deleteLieuFromList(lieu.id)"
+                @click="deleteLieuFromList(lieu.id)"
                 class="delete-btn-list"
                 :disabled="lieuxStore.loading"
               >
@@ -526,15 +518,11 @@ const clearSearch = () => {
               </button>
             </div>
 
-            <p
-              v-if="lieu.description"
-              class="lieu-description"
-              @click.stop="goToLieuOnMap(lieu)"
-            >
+            <p v-if="lieu.description" class="lieu-description" @click="goToLieuOnMap(lieu)">
               {{ lieu.description }}
             </p>
 
-            <div class="lieu-meta" @click.stop="goToLieuOnMap(lieu)">
+            <div class="lieu-meta" @click="goToLieuOnMap(lieu)">
               <div class="meta-item">
                 📍 {{ lieu.lat.toFixed(4) }}, {{ lieu.lng.toFixed(4) }}
               </div>
@@ -545,9 +533,9 @@ const clearSearch = () => {
                 🗓️ Événement: {{ formatDate(lieu.dateEvenement) }}
               </div>
             </div>
-
+            
             <!-- Indicateur visuel que l'élément est cliquable -->
-            <div class="lieu-click-indicator" @click.stop="goToLieuOnMap(lieu)">
+            <div class="lieu-click-indicator">
               <span class="click-text">👆 Cliquer pour voir sur la carte</span>
               <span class="click-arrow">🗺️</span>
             </div>
@@ -708,15 +696,9 @@ img[alt*="Vue"],
 }
 
 @keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 1;
-  }
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
 }
 
 /* Overlay de chargement */
@@ -1261,4 +1243,3 @@ img[alt*="Vue"],
     font-size: 12px;
   }
 }
-</style>
