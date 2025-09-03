@@ -732,6 +732,7 @@ img[alt*="Vue"],
   margin-bottom: 12px;
   line-height: 1.5;
   font-size: 14px;
+  overflow-y: auto;
 }
 
 .lieu-meta {

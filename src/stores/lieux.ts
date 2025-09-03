@@ -73,7 +73,7 @@ export const useLieuxStore = defineStore("lieux", () => {
         createdAt: new Date().toISOString(),
       };
 
-      const id = await saveToFirestore(lieuComplet);
+      const id = await saveToFirestore(lieuComplet) as string;
 
       const lieuAvecId: Lieu = {
         ...lieuComplet,
