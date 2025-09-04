@@ -118,27 +118,27 @@ const initMap = async () => {
         }).addTo(map.value);
 
         // Ajouter le contrôle de géocodage
-        const geocoderControl = (L.Control as any)
-          .geocoder({
-            geocoder: (L.Control as any).Geocoder.nominatim(),
-            defaultMarkGeocode: false,
-          })
-          .on("markgeocode", function (e: any) {
-            const bbox = e.geocode.bbox;
-            const poly = L.polygon([
-              bbox.getSouthEast(),
-              bbox.getNorthEast(),
-              bbox.getNorthWest(),
-              bbox.getSouthWest(),
-            ]).addTo(map.value);
-            map.value.fitBounds(poly.getBounds());
+        const geocoder = (L.Control as any).Geocoder.nominatim({
+          defaultMarkGeocode: false,
+        });
 
-            // Supprimer le polygone après un délai
-            setTimeout(() => {
-              map.value.removeLayer(poly);
-            }, 3000);
-          })
-          .addTo(map.value);
+        geocoder.on("markgeocode", function (e: any) {
+          const bbox = e.geocode.bbox;
+          const poly = L.polygon([
+            bbox.getSouthEast(),
+            bbox.getNorthEast(),
+            bbox.getNorthWest(),
+            bbox.getSouthWest(),
+          ]).addTo(map.value);
+          map.value.fitBounds(poly.getBounds());
+
+          // Supprimer le polygone après un délai
+          setTimeout(() => {
+            map.value.removeLayer(poly);
+          }, 3000);
+        });
+
+        geocoder.addTo(map.value);
 
         // Ajouter les marqueurs existants
         lieuxStore.lieux.forEach((lieu) => {
@@ -301,8 +301,9 @@ const saveNewMarker = async () => {
   }
 
   if (isEditMode.value && editingLieuId.value) {
-    // Mode modification - adaptation pour votre API existante
-    const updates = {
+    // Mode modification
+    const updatedLieu = {
+      id: editingLieuId.value,
       nom: formData.value.nom.trim(),
       description: formData.value.description.trim(),
       lat: formData.value.lat,
@@ -310,7 +311,7 @@ const saveNewMarker = async () => {
       dateEvenement: formData.value.dateEvenement || undefined,
     };
 
-    const result = await lieuxStore.updateLieu(editingLieuId.value, updates);
+    const result = await lieuxStore.updateLieu(updatedLieu);
 
     if (result) {
       // Recharger la carte
