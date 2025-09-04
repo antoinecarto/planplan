@@ -93,7 +93,7 @@ const lieuxFiltres = computed(() => {
   });
 });
 
-// Charger les lieux au démarrage de l'application
+// Charger les lieux au démarrage
 onMounted(async () => {
   await lieuxStore.loadLieux();
   initMap();
