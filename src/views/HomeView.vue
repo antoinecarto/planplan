@@ -103,7 +103,7 @@ const initMap = async () => {
 };
 
 const customIcon = L.icon({
-  iconUrl: 'OSM_Pin.svg',
+  iconUrl: 'pin.svg',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -570,14 +570,12 @@ const clearSearch = () => {
         @click="switchToMap"
         :class="['nav-button', currentView === 'carte' ? 'active' : '']"
       >
-        <span class="nav-icon">🗺️</span>
         <span class="nav-text">Carte</span>
       </button>
       <button
         @click="switchToList"
         :class="['nav-button', currentView === 'liste' ? 'active' : '']"
       >
-        <span class="nav-icon">📝</span>
         <span class="nav-text">Liste</span>
       </button>
     </footer>
