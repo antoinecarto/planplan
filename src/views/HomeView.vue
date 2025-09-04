@@ -102,9 +102,17 @@ const initMap = async () => {
   }
 };
 
+const customIcon = L.icon({
+  iconUrl: 'OSM_Pin.svg',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
 const addExistingMarker = (lieu: any) => {
   if (map.value) {
-    const marker = L.marker([lieu.lat, lieu.lng]);
+    const marker = L.marker([lieu.lat, lieu.lng], { icon: customIcon });
 
     const popupContent = `
       <div style="min-width: 250px; font-family: system-ui;">
