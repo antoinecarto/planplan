@@ -87,7 +87,6 @@ const initMap = async () => {
   if (currentView.value !== "carte") return;
   await nextTick();
 
-  // Nettoyer la carte existante
   if (map.value) {
     map.value.off();
     map.value.remove();
@@ -96,7 +95,6 @@ const initMap = async () => {
 
   setTimeout(async () => {
     try {
-      // Créer la carte
       map.value = L.map("map").setView([48.8566, 2.3522], 12);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -105,11 +103,8 @@ const initMap = async () => {
       }).addTo(map.value);
 
       // Import dynamique pour le geocoder
-      const LControlGeocoderModule = await import("leaflet-control-geocoder");
-      const LControlGeocoder =
-        LControlGeocoderModule.default || LControlGeocoderModule;
+      const LControlGeocoder = await import("leaflet-control-geocoder");
 
-      // Ajouter le contrôle de géocodage
       const geocoderControl = (L.Control as any)
         .geocoder({
           geocoder: LControlGeocoder.nominatim(),
@@ -123,21 +118,13 @@ const initMap = async () => {
             bbox.getNorthWest(),
             bbox.getSouthWest(),
           ]).addTo(map.value);
-
           map.value.fitBounds(poly.getBounds());
-
-          // Supprimer le polygone après 3s
           setTimeout(() => map.value.removeLayer(poly), 3000);
         })
         .addTo(map.value);
 
-      // Ajouter les marqueurs existants
       lieuxStore.lieux.forEach(addExistingMarker);
-
-      // Écouter les clics sur la carte
       map.value.on("click", onMapClick);
-
-      console.log("Carte initialisée avec geocoder dynamique ✅");
     } catch (err) {
       console.error("Erreur init map:", err);
     }

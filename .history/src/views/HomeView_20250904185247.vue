@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick, computed } from "vue";
 import L from "leaflet";
-import "leaflet-control-geocoder/dist/Control.Geocoder.css"; // CSS seulement
+import "leaflet-control-geocoder/dist/Control.Geocoder.css";
 import { useLieuxStore } from "@/stores/lieux";
 
 const lieuxStore = useLieuxStore();
@@ -9,7 +9,7 @@ const map = ref<any>(null);
 const currentView = ref<"carte" | "liste">("carte");
 const searchQuery = ref("");
 
-// Formulaire
+// Variables pour le formulaire
 const showForm = ref(false);
 const isEditMode = ref(false);
 const editingLieuId = ref<string | null>(null);
@@ -22,52 +22,68 @@ const formData = ref({
 });
 let tempMarker: any = null;
 
-// Géolocalisation
+// Variables pour la géolocalisation
 const isLocating = ref(false);
 const userLocationMarker = ref<any>(null);
 
-// Tri
+// Variables pour le tri
 const sortOrder = ref<"asc" | "desc">("desc");
 
-// Format date
-const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleDateString("fr-FR", {
+// Utilitaire pour formater les dates
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
-const formatDateTime = (dateString: string) =>
-  new Date(dateString).toLocaleDateString("fr-FR", {
+};
+
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
+};
 
-// Lieux filtrés
+// Fonction de recherche filtrée avec tri
 const lieuxFiltres = computed(() => {
   let lieux = lieuxStore.lieux;
+
+  // Filtrage par recherche
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase().trim();
     lieux = lieux.filter(
-      (l) =>
-        l.nom.toLowerCase().includes(query) ||
-        (l.description && l.description.toLowerCase().includes(query))
+      (lieu) =>
+        lieu.nom.toLowerCase().includes(query) ||
+        (lieu.description && lieu.description.toLowerCase().includes(query))
     );
   }
+
+  // Tri par date d'événement
   return lieux.sort((a, b) => {
-    const aHasDate = a.dateEvenement?.trim() !== "";
-    const bHasDate = b.dateEvenement?.trim() !== "";
+    // Les lieux avec date d'événement en premier
+    const aHasDate = a.dateEvenement && a.dateEvenement.trim() !== "";
+    const bHasDate = b.dateEvenement && b.dateEvenement.trim() !== "";
+
     if (aHasDate && !bHasDate) return -1;
     if (!aHasDate && bHasDate) return 1;
+
     if (aHasDate && bHasDate) {
+      // Ici TS sait que les deux ne sont pas undefined → on peut utiliser !
       const dateA = new Date(a.dateEvenement!);
       const dateB = new Date(b.dateEvenement!);
       return sortOrder.value === "desc"
         ? dateB.getTime() - dateA.getTime()
         : dateA.getTime() - dateB.getTime();
     }
+
+    // Si aucun n'a de date d'événement, tri par date d'enregistrement
+    // On protège avec ?? car dateEnregistrement peut aussi être undefined
     const dateA = new Date(a.dateEnregistrement ?? 0);
     const dateB = new Date(b.dateEnregistrement ?? 0);
     return sortOrder.value === "desc"
@@ -76,75 +92,69 @@ const lieuxFiltres = computed(() => {
   });
 });
 
-// Init
+// Charger les lieux au démarrage de l'application
 onMounted(async () => {
   await lieuxStore.loadLieux();
   initMap();
 });
 
-// --- Init map avec geocoder dynamique ---
 const initMap = async () => {
-  if (currentView.value !== "carte") return;
-  await nextTick();
+  if (currentView.value === "carte") {
+    await nextTick();
 
-  // Nettoyer la carte existante
-  if (map.value) {
-    map.value.off();
-    map.value.remove();
-    map.value = null;
-  }
-
-  setTimeout(async () => {
-    try {
-      // Créer la carte
-      map.value = L.map("map").setView([48.8566, 2.3522], 12);
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map.value);
-
-      // Import dynamique pour le geocoder
-      const LControlGeocoderModule = await import("leaflet-control-geocoder");
-      const LControlGeocoder =
-        LControlGeocoderModule.default || LControlGeocoderModule;
-
-      // Ajouter le contrôle de géocodage
-      const geocoderControl = (L.Control as any)
-        .geocoder({
-          geocoder: LControlGeocoder.nominatim(),
-          defaultMarkGeocode: false,
-        })
-        .on("markgeocode", (e: any) => {
-          const bbox = e.geocode.bbox;
-          const poly = L.polygon([
-            bbox.getSouthEast(),
-            bbox.getNorthEast(),
-            bbox.getNorthWest(),
-            bbox.getSouthWest(),
-          ]).addTo(map.value);
-
-          map.value.fitBounds(poly.getBounds());
-
-          // Supprimer le polygone après 3s
-          setTimeout(() => map.value.removeLayer(poly), 3000);
-        })
-        .addTo(map.value);
-
-      // Ajouter les marqueurs existants
-      lieuxStore.lieux.forEach(addExistingMarker);
-
-      // Écouter les clics sur la carte
-      map.value.on("click", onMapClick);
-
-      console.log("Carte initialisée avec geocoder dynamique ✅");
-    } catch (err) {
-      console.error("Erreur init map:", err);
+    // Nettoyer la carte existante proprement
+    if (map.value) {
+      map.value.off();
+      map.value.remove();
+      map.value = null;
     }
-  }, 150);
+
+    setTimeout(() => {
+      try {
+        map.value = L.map("map").setView([48.8566, 2.3522], 12);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(map.value);
+
+        // Ajouter le contrôle de géocodage
+        const geocoderControl = (L.Control as any)
+          .geocoder({
+            geocoder: (L.Control as any).Geocoder.nominatim(),
+            defaultMarkGeocode: false,
+          })
+          .on("markgeocode", function (e: any) {
+            const bbox = e.geocode.bbox;
+            const poly = L.polygon([
+              bbox.getSouthEast(),
+              bbox.getNorthEast(),
+              bbox.getNorthWest(),
+              bbox.getSouthWest(),
+            ]).addTo(map.value);
+            map.value.fitBounds(poly.getBounds());
+
+            // Supprimer le polygone après un délai
+            setTimeout(() => {
+              map.value.removeLayer(poly);
+            }, 3000);
+          })
+          .addTo(map.value);
+
+        // Ajouter les marqueurs existants
+        lieuxStore.lieux.forEach((lieu) => {
+          addExistingMarker(lieu);
+        });
+
+        // Écouter les clics sur la carte
+        map.value.on("click", onMapClick);
+      } catch (error) {
+        console.error("Erreur lors de l'initialisation de la carte:", error);
+      }
+    }, 150);
+  }
 };
 
-// Icon custom
 const customIcon = L.icon({
   iconUrl: "pin.svg",
   iconSize: [25, 41],
@@ -153,37 +163,42 @@ const customIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-// Ajouter un marker
 const addExistingMarker = (lieu: any) => {
-  if (!map.value) return;
-  const marker = L.marker([lieu.lat, lieu.lng], { icon: customIcon });
-  const popupContent = `
-    <div style="min-width:250px;font-family:system-ui;">
-      <h3 style="margin-bottom:8px;color:#1f2937;font-size:16px;">${
-        lieu.nom
-      }</h3>
-      <p style="margin-bottom:8px;color:#6b7280;font-size:13px;line-height:1.4;">${
-        lieu.description || ""
-      }</p>
-      <div style="font-size:11px;color:#9ca3af;margin-bottom:10px;">
-        <div>📅 Enregistré: ${formatDateTime(lieu.dateEnregistrement)}</div>
-        ${
-          lieu.dateEvenement
-            ? `<div>🗓️ Événement: ${formatDate(lieu.dateEvenement)}</div>`
-            : ""
-        }
+  if (map.value) {
+    const marker = L.marker([lieu.lat, lieu.lng], { icon: customIcon });
+
+    const popupContent = `
+      <div style="min-width: 250px; font-family: system-ui;">
+        <h3 style="margin-bottom: 8px; color: #1f2937; font-size: 16px;">${
+          lieu.nom
+        }</h3>
+        <p style="margin-bottom: 8px; color: #6b7280; font-size: 13px; line-height: 1.4;">${
+          lieu.description
+        }</p>
+        <div style="font-size: 11px; color: #9ca3af; margin-bottom: 10px;">
+          <div>📅 Enregistré: ${formatDateTime(lieu.dateEnregistrement)}</div>
+          ${
+            lieu.dateEvenement
+              ? `<div>🗓️ Événement: ${formatDate(lieu.dateEvenement)}</div>`
+              : ""
+          }
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="window.editMarkerFromMap('${lieu.id}')" 
+                  style="background: #3b82f6; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; flex: 1;">
+            ✏️ Modifier
+          </button>
+          <button onclick="window.deleteMarkerFromMap('${lieu.id}')" 
+                  style="background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; flex: 1;">
+            🗑️ Supprimer
+          </button>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="window.editMarkerFromMap('${
-          lieu.id
-        }')" style="flex:1;background:#3b82f6;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;">✏️ Modifier</button>
-        <button onclick="window.deleteMarkerFromMap('${
-          lieu.id
-        }')" style="flex:1;background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;">🗑️ Supprimer</button>
-      </div>
-    </div>
-  `;
-  marker.bindPopup(popupContent).addTo(map.value);
+    `;
+
+    marker.bindPopup(popupContent);
+    marker.addTo(map.value);
+  }
 };
 
 const onMapClick = (e: any) => {
