@@ -618,7 +618,7 @@ body {
 /* Banner d'erreur */
 .error-banner {
   background-color: #fee2e2;
-  color: #dc2626;
+  color: #e56977;
   padding: 12px 16px;
   display: flex;
   align-items: center;
@@ -630,7 +630,7 @@ body {
 .error-close {
   background: none;
   border: none;
-  color: #dc2626;
+  color: #e56977;
   font-size: 18px;
   cursor: pointer;
   padding: 0;
@@ -685,7 +685,7 @@ img[alt*="Vue"],
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: #e56977;
   color: white;
   border: none;
   font-size: 20px;
@@ -699,7 +699,7 @@ img[alt*="Vue"],
 }
 
 .location-btn:hover:not(:disabled) {
-  background: #2563eb;
+  background: #e56977;
   transform: scale(1.1);
 }
 
@@ -1088,7 +1088,7 @@ img[alt*="Vue"],
 }
 
 .delete-btn-list {
-  background-color: #ef4444;
+  background-color: #e56977;
   color: white;
   border: none;
   padding: 8px;
@@ -1112,11 +1112,11 @@ img[alt*="Vue"],
 }
 
 .delete-btn-list:not(:disabled):hover {
-  background-color: #dc2626;
+  background-color: #e56977;
 }
 
 .delete-btn-list:not(:disabled):active {
-  background-color: #dc2626;
+  background-color: #e56977;
   transform: scale(0.95);
 }
 
@@ -1160,12 +1160,12 @@ img[alt*="Vue"],
 }
 
 .nav-button.active {
-  background-color: #3b82f6;
+  background-color: #e56977;
   color: white;
 }
 
 .nav-button.active:active {
-  background-color: #2563eb;
+  background-color: #e56977;
 }
 
 .nav-icon {
