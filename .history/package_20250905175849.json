@@ -8,7 +8,6 @@
   },
   "scripts": {
     "dev": "vite",
-    "build:css": "tailwindcss -i ./src/assets/index.css -o ./src/assets/output.css --watch",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",

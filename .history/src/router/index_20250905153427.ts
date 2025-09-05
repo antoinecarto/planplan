@@ -14,7 +14,7 @@ const routes = [
     meta: { requiresAuth: false },
   },
   {
-    path: "/home",
+    path: "/",
     name: "home",
     component: HomeView,
     meta: { requiresAuth: true },
@@ -57,7 +57,7 @@ router.beforeEach(async (to) => {
   }
 
   if (to.path === "/auth" && user) {
-    return { name: "home" };
+    return { name: "Game" };
   }
 });
 

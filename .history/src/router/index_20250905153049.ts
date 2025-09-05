@@ -4,7 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 
 // Pages
 import AuthPage from "../views/AuthPage.vue";
-import HomeView from "../views/HomeView.vue";
+import GameRoom from "../views/HomeView.vue";
 
 const routes = [
   {
@@ -14,7 +14,7 @@ const routes = [
     meta: { requiresAuth: false },
   },
   {
-    path: "/home",
+    path: "/",
     name: "home",
     component: HomeView,
     meta: { requiresAuth: true },
@@ -57,7 +57,7 @@ router.beforeEach(async (to) => {
   }
 
   if (to.path === "/auth" && user) {
-    return { name: "home" };
+    return { name: "Game" };
   }
 });
 

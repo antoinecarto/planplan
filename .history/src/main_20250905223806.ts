@@ -3,10 +3,7 @@ import { createPinia } from "pinia";
 
 import App from "./App.vue";
 import router from "./router";
-
-// IMPORTANT : Tailwind en dernier pour qu'il ait la priorité
-import "./assets/main.css"; // Styles de base de Vue
-import "./assets/index.css"; // Tailwind CSS
+import "./assets/index.css"; // Gardez seulement celui-ci s'il contient les directives Tailwind
 
 const app = createApp(App);
 
