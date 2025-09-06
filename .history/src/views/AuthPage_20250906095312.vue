@@ -12,7 +12,7 @@
           type="email"
           placeholder="Enter your Email"
           required
-          class="darkMode w-full border border-gray-300 rounded-xl p-3 focus:border-gray-600 focus:ring-1 focus:ring-gray-600 outline-none transition"
+          class="w-full border border-gray-300 rounded-xl p-3 focus:border-gray-600 focus:ring-1 focus:ring-gray-600 outline-none transition"
         />
         <input
           v-model="password"
