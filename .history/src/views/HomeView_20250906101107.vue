@@ -158,14 +158,14 @@ const addExistingMarker = (lieu: any) => {
   if (!map.value) return;
   const marker = L.marker([lieu.lat, lieu.lng], { icon: customIcon });
   const popupContent = `
-    <div style="min-width:250px;font-family:system-ui;">
+    <div  style="min-width:250px;font-family:system-ui;">
       <h3  style="margin-bottom:8px;color:#1f2937;font-size:16px;">${
         lieu.nom
       }</h3>
-      <p style="margin-bottom:8px;color:#6b7280;font-size:13px;line-height:1.4;">${
+      <p  style="margin-bottom:8px;color:#6b7280;font-size:13px;line-height:1.4;">${
         lieu.description || ""
       }</p>
-      <div style="font-size:11px;color:#9ca3af;margin-bottom:10px;">
+      <div  style="font-size:11px;color:#9ca3af;margin-bottom:10px;">
         <div>📅 Enregistré: ${formatDateTime(lieu.dateEnregistrement)}</div>
         ${
           lieu.dateEvenement
@@ -173,7 +173,7 @@ const addExistingMarker = (lieu: any) => {
             : ""
         }
       </div>
-      <div style="display:flex;gap:8px;">
+      <div   style="display:flex;gap:8px;">
         <button onclick="window.editMarkerFromMap('${
           lieu.id
         }')" style="flex:1;background:#3b82f6;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;">✏️ Modifier</button>

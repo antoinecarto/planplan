@@ -158,8 +158,8 @@ const addExistingMarker = (lieu: any) => {
   if (!map.value) return;
   const marker = L.marker([lieu.lat, lieu.lng], { icon: customIcon });
   const popupContent = `
-    <div style="min-width:250px;font-family:system-ui;">
-      <h3  style="margin-bottom:8px;color:#1f2937;font-size:16px;">${
+    <div class="darkMode" style="min-width:250px;font-family:system-ui;">
+      <h3 style="margin-bottom:8px;color:#1f2937;font-size:16px;">${
         lieu.nom
       }</h3>
       <p style="margin-bottom:8px;color:#6b7280;font-size:13px;line-height:1.4;">${
@@ -496,7 +496,7 @@ const toggleSortOrder = () => {
 </script>
 
 <template>
-  <div class="app-container darkMode">
+  <div class="app-container">
     <!-- Message d'erreur global -->
     <div v-if="lieuxStore.error" class="error-banner">
       ⚠️ {{ lieuxStore.error }}
