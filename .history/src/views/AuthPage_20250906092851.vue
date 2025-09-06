@@ -1,8 +1,8 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-600 px-4">
-    <h1 class="text-4xl font-bold justify-center text-gray-200">PLAN PLAN</h1>
+  <div class="flex items-center justify-center min-h-screen bg-rose-700 px-4">
+    <h1 class="text-4xl font-bold justify-center text-yellow-700">PLAN PLAN</h1>
     <div class="w-full max-w-md bg-white p-8 rounded-3xl shadow-lg">
-      <h2 class="text-2xl font-bold mb-6 text-center text-gray-600 uppercase">
+      <h2 class="text-2xl font-bold mb-6 text-center text-blue-700 uppercase">
         Connexion au compte
       </h2>
 
@@ -12,14 +12,14 @@
           type="email"
           placeholder="Enter your Email"
           required
-          class="w-full border border-gray-300 rounded-xl p-3 focus:border-gray-600 focus:ring-1 focus:ring-gray-600 outline-none transition"
+          class="w-full border border-gray-300 rounded-xl p-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
         />
         <input
           v-model="password"
           type="password"
           placeholder="Enter your Password"
           required
-          class="w-full border border-gray-300 rounded-xl p-3 focus:border-gray-600 focus:ring-1 focus:ring-gray-600 outline-none transition"
+          class="w-full border border-gray-300 rounded-xl p-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
         />
 
         <div class="flex items-center gap-2 text-sm text-gray-600">
@@ -29,13 +29,13 @@
 
         <button
           type="submit"
-          class="w-full bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors shadow-md"
+          class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-md"
         >
           Connexion
         </button>
       </form>
 
-      <div class="flex justify-between mt-4 text-sm text-gray-600">
+      <div class="flex justify-between mt-4 text-sm text-blue-600">
         <button @click="isLogin = false" class="hover:underline">
           Vous n'avez pas de compte ?
         </button>

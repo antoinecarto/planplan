@@ -29,7 +29,7 @@
 
         <button
           type="submit"
-          class="w-full bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors shadow-md"
+          class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors shadow-md"
         >
           Connexion
         </button>

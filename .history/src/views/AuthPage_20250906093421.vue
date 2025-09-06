@@ -2,7 +2,7 @@
   <div class="flex items-center justify-center min-h-screen bg-gray-600 px-4">
     <h1 class="text-4xl font-bold justify-center text-gray-200">PLAN PLAN</h1>
     <div class="w-full max-w-md bg-white p-8 rounded-3xl shadow-lg">
-      <h2 class="text-2xl font-bold mb-6 text-center text-gray-600 uppercase">
+      <h2 class="text-2xl font-bold mb-6 text-center text-blue-700 uppercase">
         Connexion au compte
       </h2>
 
@@ -29,7 +29,7 @@
 
         <button
           type="submit"
-          class="w-full bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors shadow-md"
+          class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-600 transition-colors shadow-md"
         >
           Connexion
         </button>
