@@ -937,7 +937,7 @@ const toggleSortOrder = () => {
       </div>
 
       <!-- Vue Liste avec filtre par tag -->
-      <div v-else class="liste-container">
+      <div v-else class="liste-container dark:text-white">
         <div class="liste-header">
           <h1 class="titre">Mes lieux</h1>
           <div class="stats-and-sort">
@@ -1061,10 +1061,7 @@ const toggleSortOrder = () => {
         <div v-else class="lieux-list">
           <div class="lieu-item" v-for="lieu in lieuxFiltres" :key="lieu.id">
             <div class="lieu-header">
-              <h3
-                class="lieu-nom dark:text-white"
-                @click.stop="goToLieuOnMap(lieu)"
-              >
+              <h3 class="lieu-nom" @click.stop="goToLieuOnMap(lieu)">
                 {{ lieu.nom }}
               </h3>
               <div class="lieu-actions">

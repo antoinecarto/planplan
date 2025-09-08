@@ -1061,10 +1061,7 @@ const toggleSortOrder = () => {
         <div v-else class="lieux-list">
           <div class="lieu-item" v-for="lieu in lieuxFiltres" :key="lieu.id">
             <div class="lieu-header">
-              <h3
-                class="lieu-nom dark:text-white"
-                @click.stop="goToLieuOnMap(lieu)"
-              >
+              <h3 class="lieu-nom" @click.stop="goToLieuOnMap(lieu)">
                 {{ lieu.nom }}
               </h3>
               <div class="lieu-actions">
