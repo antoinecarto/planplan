@@ -615,6 +615,12 @@ const toggleSortOrder = () => {
 </script>
 
 <template>
+  <button
+    @click="logout"
+    class="w-full bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700 transition-colors mt-4"
+  >
+    Se déconnecter
+  </button>
   <div class="app-container darkMode">
     <!-- Message d'erreur global -->
     <div v-if="lieuxStore.error" class="error-banner">
@@ -624,12 +630,6 @@ const toggleSortOrder = () => {
 
     <!-- Contenu principal -->
     <main class="main-content">
-      <button
-        @click="logout"
-        class="w-full bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 text-white py-3 rounded-xl font-semibold hover:brightness-110 transition-all shadow-md"
-      >
-        Se déconnecter
-      </button>
       <!-- Vue Carte -->
       <div v-if="currentView === 'carte'" class="carte-view">
         <div id="map" class="map-container"></div>
@@ -1046,9 +1046,6 @@ body {
   position: relative;
   margin: 0;
   padding: 0;
-}
-.logout {
-  background-color: #e56977;
 }
 
 /* Banner d'erreur */
@@ -1858,7 +1855,6 @@ img[alt*="Vue"],
   font-size: 14px;
 }
 .darkMode {
-  background-color: #f5f5f5 !important;
   color: black !important;
 }
 

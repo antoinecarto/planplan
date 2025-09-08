@@ -626,7 +626,7 @@ const toggleSortOrder = () => {
     <main class="main-content">
       <button
         @click="logout"
-        class="w-full bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 text-white py-3 rounded-xl font-semibold hover:brightness-110 transition-all shadow-md"
+        class="w-full text-white bg-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-700 transition-colors mt-4"
       >
         Se déconnecter
       </button>
