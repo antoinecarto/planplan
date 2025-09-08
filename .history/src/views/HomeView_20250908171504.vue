@@ -679,19 +679,6 @@ const goToLieuOnMap = (lieu: any) => {
     }, 200);
   }, 100);
 };
-// filtres
-const lieuxFiltres = computed(() => {
-  // Ici tu peux appliquer tes filtres + tri
-  let lieux = [...lieuxStore.lieux];
-
-  lieux.sort((a, b) => {
-    return sortOrder.value === "desc"
-      ? b.dateEnregistrement.localeCompare(a.dateEnregistrement)
-      : a.dateEnregistrement.localeCompare(b.dateEnregistrement);
-  });
-
-  return lieux;
-});
 
 // Fonction pour modifier depuis la liste
 const editLieuFromList = (lieu: any) => {
@@ -1351,13 +1338,8 @@ img[alt*="Vue"],
 .tags-selector {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  max-height: 120px;
-  overflow-y: auto;
-  padding: 4px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background-color: #fff;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .tag-option {
@@ -1392,8 +1374,6 @@ img[alt*="Vue"],
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
-  max-height: 120px;
-  overflow-y: auto;
 }
 
 .existing-tag {

@@ -1351,13 +1351,8 @@ img[alt*="Vue"],
 .tags-selector {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  max-height: 120px;
-  overflow-y: auto;
-  padding: 4px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background-color: #fff;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .tag-option {
@@ -1392,8 +1387,6 @@ img[alt*="Vue"],
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
-  max-height: 120px;
-  overflow-y: auto;
 }
 
 .existing-tag {

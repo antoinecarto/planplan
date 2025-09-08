@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, nextTick, computed, watch } from "vue";
+import { onMounted, ref, nextTick, computed } from "vue";
 import L from "leaflet";
 import "leaflet-control-geocoder/dist/Control.Geocoder.css"; // CSS seulement
 import { useLieuxStore } from "@/stores/lieux";
@@ -22,15 +22,8 @@ const map = ref<any>(null);
 const currentView = ref<"carte" | "liste">("carte");
 const searchQuery = ref("");
 
-// --- Tags: persistance locale + Firestore sync ---
-interface Tag {
-  id?: string;
-  name: string;
-  color: string;
-  localOnly?: boolean; // true si présent seulement localement
-}
-const TAGS_LOCAL_KEY = "lieux:tags_v1";
-const availableTags = ref<Tag[]>([]);
+// Système de tags
+const availableTags = ref<{ name: string; color: string }[]>([]);
 
 const selectedTagFilter = ref<string>(""); // Pour le filtre dans la liste
 const showTagManager = ref(false);
@@ -90,48 +83,48 @@ const getTagColor = (tagName: string) => {
   return tag ? tag.color : "#6b7280";
 };
 
-// Charger les tags depuis localStorage (immédiat)
-const loadTagsLocal = () => {
-  const raw = localStorage.getItem(TAGS_LOCAL_KEY);
-  if (raw) {
-    try {
-      availableTags.value = JSON.parse(raw) as Tag[];
-    } catch (e) {
-      console.error("Erreur parsing tags locaux:", e);
-      availableTags.value = [];
-      localStorage.removeItem(TAGS_LOCAL_KEY);
+// Lieux filtrés avec recherche et tags
+const lieuxFiltres = computed(() => {
+  let lieux = lieuxStore.lieux;
+
+  // Filtre par recherche
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim();
+    lieux = lieux.filter(
+      (l) =>
+        l.nom.toLowerCase().includes(query) ||
+        (l.description && l.description.toLowerCase().includes(query)) ||
+        (l.tags &&
+          l.tags.some((tag: string) => tag.toLowerCase().includes(query)))
+    );
+  }
+
+  // Filtre par tag sélectionné
+  if (selectedTagFilter.value) {
+    lieux = lieux.filter(
+      (l) => l.tags && l.tags.includes(selectedTagFilter.value)
+    );
+  }
+
+  return lieux.sort((a, b) => {
+    const aHasDate = a.dateEvenement?.trim() !== "";
+    const bHasDate = b.dateEvenement?.trim() !== "";
+    if (aHasDate && !bHasDate) return -1;
+    if (!aHasDate && bHasDate) return 1;
+    if (aHasDate && bHasDate) {
+      const dateA = new Date(a.dateEvenement!);
+      const dateB = new Date(b.dateEvenement!);
+      return sortOrder.value === "desc"
+        ? dateB.getTime() - dateA.getTime()
+        : dateA.getTime() - dateB.getTime();
     }
-  } else {
-    availableTags.value = [];
-  }
-};
-
-// Charger / synchroniser les tags depuis Firestore (si connecté)
-// fusionne en gardant les tags locaux qui n'existent pas sur Firestore
-const fetchTagsFromFirestore = async () => {
-  try {
-    const snapshot = await getDocs(collection(db, "tags"));
-    const firestoreTags: Tag[] = snapshot.docs.map((d) => ({
-      id: d.id,
-      ...(d.data() as { name: string; color: string }),
-    }));
-
-    // merge: firestore tags first, then add local-only tags that don't exist on firestore
-    const merged: Tag[] = [...firestoreTags];
-    const namesFs = new Set(firestoreTags.map((t) => t.name));
-    (availableTags.value || []).forEach((lt) => {
-      if (!namesFs.has(lt.name)) {
-        merged.push({ ...lt, localOnly: true });
-      }
-    });
-
-    availableTags.value = merged;
-    localStorage.setItem(TAGS_LOCAL_KEY, JSON.stringify(availableTags.value));
-  } catch (err) {
-    console.error("Erreur lors du chargement des tags depuis Firestore:", err);
-    // on garde les tags locaux si erreur réseau / permissions
-  }
-};
+    const dateA = new Date(a.dateEnregistrement ?? 0);
+    const dateB = new Date(b.dateEnregistrement ?? 0);
+    return sortOrder.value === "desc"
+      ? dateB.getTime() - dateA.getTime()
+      : dateA.getTime() - dateB.getTime();
+  });
+});
 
 // Tags utilisés (pour le filtre)
 const usedTags = computed(() => {
@@ -144,109 +137,43 @@ const usedTags = computed(() => {
   return Array.from(tags).sort();
 });
 
+// Charger les tags depuis Firestore
+const loadTags = async () => {
+  const snapshot = await getDocs(collection(db, "tags"));
+  availableTags.value = snapshot.docs.map(
+    (d) => d.data() as { name: string; color: string }
+  );
+};
+
+// Gestion des tags
 // Ajouter un nouveau tag
 const addNewTag = async () => {
-  const nameTrim = newTagName.value.trim();
-  if (!nameTrim) return;
-  if (availableTags.value.find((t) => t.name === nameTrim)) {
-    // déjà présent localement
+  if (
+    newTagName.value.trim() &&
+    !availableTags.value.find((t) => t.name === newTagName.value.trim())
+  ) {
+    const newTag = { name: newTagName.value.trim(), color: newTagColor.value };
+    await addDoc(collection(db, "tags"), newTag); // 👉 sauvegarde Firestore
+    availableTags.value.push(newTag);
     newTagName.value = "";
     newTagColor.value = "#3b82f6";
-    return;
-  }
-
-  // Ajout optimiste local (id temporaire)
-  const tempId = `local_${Date.now()}`;
-  const tempTag: Tag = {
-    id: tempId,
-    name: nameTrim,
-    color: newTagColor.value,
-    localOnly: true,
-  };
-  availableTags.value.push(tempTag);
-  localStorage.setItem(TAGS_LOCAL_KEY, JSON.stringify(availableTags.value));
-
-  newTagName.value = "";
-  newTagColor.value = "#3b82f6";
-
-  // Tentative d'enregistrer sur Firestore
-  try {
-    const docRef = await addDoc(collection(db, "tags"), {
-      name: nameTrim,
-      color: tempTag.color,
-    });
-    // remplacer le tag temporaire par le tag Firestore (id réel)
-    const idx = availableTags.value.findIndex((t) => t.id === tempId);
-    const realTag: Tag = {
-      id: docRef.id,
-      name: nameTrim,
-      color: tempTag.color,
-    };
-    if (idx !== -1) {
-      availableTags.value[idx] = realTag;
-    } else {
-      availableTags.value.push(realTag);
-    }
-    localStorage.setItem(TAGS_LOCAL_KEY, JSON.stringify(availableTags.value));
-  } catch (err) {
-    // si impossible, on garde le tag local (offline mode)
-    console.warn(
-      "Impossible d'enregistrer le tag sur Firestore — sauvegardé localement.",
-      err
-    );
   }
 };
 
 // Supprimer un tag
 const removeTag = async (index: number) => {
   const tag = availableTags.value[index];
-  if (!tag) return;
-  if (!confirm(`Supprimer le tag "${tag.name}" ?`)) return;
-
-  // Si on a un id Firestore, on tente la suppression côté serveur
-  if (tag.id && !tag.id.startsWith("local_")) {
-    try {
-      await deleteDoc(doc(db, "tags", tag.id));
-    } catch (err) {
-      console.warn(
-        "Erreur suppression tag sur Firestore — suppression locale réalisée.",
-        err
-      );
+  if (confirm(`Supprimer le tag "${tag.name}" ?`)) {
+    // ⚡ il faut stocker aussi l’ID dans availableTags pour bien supprimer
+    const snapshot = await getDocs(collection(db, "tags"));
+    const docToDelete = snapshot.docs.find((d) => d.data().name === tag.name);
+    if (docToDelete) {
+      await deleteDoc(doc(db, "tags", docToDelete.id));
     }
-  } else {
-    // Peut-être existe-t-il sur Firestore mais on n'avait pas l'id (recherche par nom)
-    try {
-      const snapshot = await getDocs(collection(db, "tags"));
-      const docToDelete = snapshot.docs.find(
-        (d) => (d.data() as any).name === tag.name
-      );
-      if (docToDelete) {
-        await deleteDoc(doc(db, "tags", docToDelete.id));
-      }
-    } catch (err) {
-      // ignore, suppression locale suffisante
-    }
+    availableTags.value.splice(index, 1);
   }
-
-  // Suppression locale
-  availableTags.value.splice(index, 1);
-  localStorage.setItem(TAGS_LOCAL_KEY, JSON.stringify(availableTags.value));
 };
 
-// Watch: sauvegarde automatique localStorage à chaque changement
-watch(
-  availableTags,
-  (newTags) => {
-    try {
-      localStorage.setItem(TAGS_LOCAL_KEY, JSON.stringify(newTags));
-    } catch (err) {
-      console.error("Erreur sauvegarde tags localStorage:", err);
-    }
-  },
-  { deep: true }
-);
-
-// Toggle tag dans le formulaire
 const toggleTagInForm = (tagName: string) => {
   const index = formData.value.tags.indexOf(tagName);
   if (index > -1) {
@@ -679,19 +606,6 @@ const goToLieuOnMap = (lieu: any) => {
     }, 200);
   }, 100);
 };
-// filtres
-const lieuxFiltres = computed(() => {
-  // Ici tu peux appliquer tes filtres + tri
-  let lieux = [...lieuxStore.lieux];
-
-  lieux.sort((a, b) => {
-    return sortOrder.value === "desc"
-      ? b.dateEnregistrement.localeCompare(a.dateEnregistrement)
-      : a.dateEnregistrement.localeCompare(b.dateEnregistrement);
-  });
-
-  return lieux;
-});
 
 // Fonction pour modifier depuis la liste
 const editLieuFromList = (lieu: any) => {
@@ -1351,13 +1265,8 @@ img[alt*="Vue"],
 .tags-selector {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  max-height: 120px;
-  overflow-y: auto;
-  padding: 4px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background-color: #fff;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .tag-option {
@@ -1392,8 +1301,6 @@ img[alt*="Vue"],
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
-  max-height: 120px;
-  overflow-y: auto;
 }
 
 .existing-tag {

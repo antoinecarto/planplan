@@ -1392,8 +1392,6 @@ img[alt*="Vue"],
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
-  max-height: 120px;
-  overflow-y: auto;
 }
 
 .existing-tag {
