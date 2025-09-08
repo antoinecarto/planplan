@@ -64,14 +64,14 @@ const formatDateTime = (dateString: string) =>
 
 // Fonction pour obtenir les couleurs des tags
 const getTagColor = (tagName: string) => {
-  const tag = availableTags.value.find((t) => t.name === tagName);
+  const tag = availableTags.value.find(t => t.name === tagName);
   return tag ? tag.color : "#6b7280";
 };
 
 // Lieux filtrés avec recherche et tags
 const lieuxFiltres = computed(() => {
   let lieux = lieuxStore.lieux;
-
+  
   // Filtre par recherche
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase().trim();
@@ -79,18 +79,15 @@ const lieuxFiltres = computed(() => {
       (l) =>
         l.nom.toLowerCase().includes(query) ||
         (l.description && l.description.toLowerCase().includes(query)) ||
-        (l.tags &&
-          l.tags.some((tag: string) => tag.toLowerCase().includes(query)))
+        (l.tags && l.tags.some((tag: string) => tag.toLowerCase().includes(query)))
     );
   }
-
+  
   // Filtre par tag sélectionné
   if (selectedTagFilter.value) {
-    lieux = lieux.filter(
-      (l) => l.tags && l.tags.includes(selectedTagFilter.value)
-    );
+    lieux = lieux.filter(l => l.tags && l.tags.includes(selectedTagFilter.value));
   }
-
+  
   return lieux.sort((a, b) => {
     const aHasDate = a.dateEvenement?.trim() !== "";
     const bHasDate = b.dateEvenement?.trim() !== "";
@@ -114,7 +111,7 @@ const lieuxFiltres = computed(() => {
 // Tags utilisés (pour le filtre)
 const usedTags = computed(() => {
   const tags = new Set<string>();
-  lieuxStore.lieux.forEach((lieu) => {
+  lieuxStore.lieux.forEach(lieu => {
     if (lieu.tags) {
       lieu.tags.forEach((tag: string) => tags.add(tag));
     }
@@ -124,13 +121,10 @@ const usedTags = computed(() => {
 
 // Gestion des tags
 const addNewTag = () => {
-  if (
-    newTagName.value.trim() &&
-    !availableTags.value.find((t) => t.name === newTagName.value.trim())
-  ) {
+  if (newTagName.value.trim() && !availableTags.value.find(t => t.name === newTagName.value.trim())) {
     availableTags.value.push({
       name: newTagName.value.trim(),
-      color: newTagColor.value,
+      color: newTagColor.value
     });
     newTagName.value = "";
     newTagColor.value = "#3b82f6";
@@ -229,50 +223,29 @@ const customIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-L.Marker.prototype.options.icon = L.divIcon({ className: "empty-marker" });
-
 // Ajouter un marker avec tags
 const addExistingMarker = (lieu: any) => {
   if (!map.value) return;
   const marker = L.marker([lieu.lat, lieu.lng], { icon: customIcon });
-
+  
   // Générer les tags HTML
-  const tagsHtml =
-    lieu.tags && lieu.tags.length > 0
-      ? `<div style="margin-bottom:8px;">${lieu.tags
-          .map(
-            (tag: string) =>
-              `<span style="background:${getTagColor(
-                tag
-              )};color:white;padding:2px 6px;border-radius:12px;font-size:10px;margin-right:4px;display:inline-block;">${tag}</span>`
-          )
-          .join("")}</div>`
-      : "";
-
+  const tagsHtml = lieu.tags && lieu.tags.length > 0 ? 
+    `<div style="margin-bottom:8px;">${lieu.tags.map((tag: string) => 
+      `<span style="background:${getTagColor(tag)};color:white;padding:2px 6px;border-radius:12px;font-size:10px;margin-right:4px;display:inline-block;">${tag}</span>`
+    ).join('')}</div>` : '';
+  
   const popupContent = `
     <div style="min-width:250px;font-family:system-ui;">
-      <h3 style="margin-bottom:8px;color:#1f2937;font-size:16px;">${
-        lieu.nom
-      }</h3>
+      <h3 style="margin-bottom:8px;color:#1f2937;font-size:16px;">${lieu.nom}</h3>
       ${tagsHtml}
-      <p style="margin-bottom:8px;color:#6b7280;font-size:13px;line-height:1.4;">${
-        lieu.description || ""
-      }</p>
+      <p style="margin-bottom:8px;color:#6b7280;font-size:13px;line-height:1.4;">${lieu.description || ""}</p>
       <div style="font-size:11px;color:#9ca3af;margin-bottom:10px;">
         <div>📅 Enregistré: ${formatDateTime(lieu.dateEnregistrement)}</div>
-        ${
-          lieu.dateEvenement
-            ? `<div>🗓️ Événement: ${formatDate(lieu.dateEvenement)}</div>`
-            : ""
-        }
+        ${lieu.dateEvenement ? `<div>🗓️ Événement: ${formatDate(lieu.dateEvenement)}</div>` : ""}
       </div>
       <div style="display:flex;gap:8px;">
-        <button onclick="window.editMarkerFromMap('${
-          lieu.id
-        }')" style="flex:1;background:#3b82f6;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;">✏️ Modifier</button>
-        <button onclick="window.deleteMarkerFromMap('${
-          lieu.id
-        }')" style="flex:1;background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;">🗑️ Supprimer</button>
+        <button onclick="window.editMarkerFromMap('${lieu.id}')" style="flex:1;background:#3b82f6;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;">✏️ Modifier</button>
+        <button onclick="window.deleteMarkerFromMap('${lieu.id}')" style="flex:1;background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;">🗑️ Supprimer</button>
       </div>
     </div>
   `;
@@ -624,6 +597,15 @@ const toggleSortOrder = () => {
           <span v-else>🎯</span>
         </button>
 
+        <!-- Bouton de gestion des tags -->
+        <button
+          @click="showTagManager = true"
+          class="tag-manager-btn"
+          title="Gérer les tags"
+        >
+          🏷️
+        </button>
+
         <!-- Indicateur de chargement -->
         <div v-if="lieuxStore.loading" class="loading-overlay">
           <div class="loading-spinner">⏳ Chargement...</div>
@@ -664,27 +646,12 @@ const toggleSortOrder = () => {
                   v-for="tag in availableTags"
                   :key="tag.name"
                   @click="toggleTagInForm(tag.name)"
-                  :class="[
-                    'tag-option',
-                    { selected: formData.tags.includes(tag.name) },
-                  ]"
-                  :style="{
-                    backgroundColor: formData.tags.includes(tag.name)
-                      ? tag.color
-                      : '#f3f4f6',
-                  }"
+                  :class="['tag-option', { 'selected': formData.tags.includes(tag.name) }]"
+                  :style="{ backgroundColor: formData.tags.includes(tag.name) ? tag.color : '#f3f4f6' }"
                 >
                   {{ tag.name }}
                 </div>
               </div>
-              <!-- ✅ Bouton discret -->
-              <button
-                @click="showTagManager = true"
-                type="button"
-                class="tag-button"
-              >
-                ➕ Ajouter/Gérer les tags
-              </button>
             </div>
 
             <div class="form-group">
@@ -733,7 +700,7 @@ const toggleSortOrder = () => {
         <div v-if="showTagManager" class="form-overlay">
           <div class="form-modal">
             <h3>🏷️ Gestion des tags</h3>
-
+            
             <div class="form-group">
               <label class="form-label">Tags existants</label>
               <div class="existing-tags">
@@ -744,7 +711,10 @@ const toggleSortOrder = () => {
                   :style="{ backgroundColor: tag.color }"
                 >
                   {{ tag.name }}
-                  <button @click="removeTag(index)" class="tag-remove-btn">
+                  <button
+                    @click="removeTag(index)"
+                    class="tag-remove-btn"
+                  >
                     ×
                   </button>
                 </div>
@@ -761,7 +731,11 @@ const toggleSortOrder = () => {
                   class="form-input"
                   maxlength="20"
                 />
-                <input v-model="newTagColor" type="color" class="color-input" />
+                <input
+                  v-model="newTagColor"
+                  type="color"
+                  class="color-input"
+                />
                 <button
                   @click="addNewTag"
                   class="add-tag-btn"
@@ -820,17 +794,11 @@ const toggleSortOrder = () => {
               <button
                 v-for="tag in usedTags"
                 :key="tag"
-                @click="
-                  selectedTagFilter = selectedTagFilter === tag ? '' : tag
-                "
-                :class="[
-                  'tag-filter-btn',
-                  { active: selectedTagFilter === tag },
-                ]"
-                :style="{
-                  backgroundColor:
-                    selectedTagFilter === tag ? getTagColor(tag) : '#f3f4f6',
-                  color: selectedTagFilter === tag ? 'white' : '#374151',
+                @click="selectedTagFilter = selectedTagFilter === tag ? '' : tag"
+                :class="['tag-filter-btn', { 'active': selectedTagFilter === tag }]"
+                :style="{ 
+                  backgroundColor: selectedTagFilter === tag ? getTagColor(tag) : '#f3f4f6',
+                  color: selectedTagFilter === tag ? 'white' : '#374151'
                 }"
               >
                 {{ tag }}
@@ -872,12 +840,14 @@ const toggleSortOrder = () => {
           </p>
         </div>
 
-        <div v-else-if="lieuxFiltres.length === 0" class="empty-state">
+        <div
+          v-else-if="lieuxFiltres.length === 0"
+          class="empty-state"
+        >
           <div class="empty-icon">🔍</div>
           <h3>Aucun résultat</h3>
           <p v-if="searchQuery && selectedTagFilter">
-            Aucun lieu ne correspond à votre recherche "{{ searchQuery }}" avec
-            le tag "{{ selectedTagFilter }}"
+            Aucun lieu ne correspond à votre recherche "{{ searchQuery }}" avec le tag "{{ selectedTagFilter }}"
           </p>
           <p v-else-if="searchQuery">
             Aucun lieu ne correspond à votre recherche "{{ searchQuery }}"
@@ -886,18 +856,10 @@ const toggleSortOrder = () => {
             Aucun lieu avec le tag "{{ selectedTagFilter }}"
           </p>
           <div class="empty-actions">
-            <button
-              v-if="searchQuery"
-              @click="clearSearch"
-              class="clear-search-btn"
-            >
+            <button v-if="searchQuery" @click="clearSearch" class="clear-search-btn">
               Effacer la recherche
             </button>
-            <button
-              v-if="selectedTagFilter"
-              @click="clearTagFilter"
-              class="clear-search-btn"
-            >
+            <button v-if="selectedTagFilter" @click="clearTagFilter" class="clear-search-btn">
               Effacer le filtre
             </button>
           </div>
@@ -930,11 +892,7 @@ const toggleSortOrder = () => {
             </div>
 
             <!-- Tags du lieu -->
-            <div
-              v-if="lieu.tags && lieu.tags.length > 0"
-              class="lieu-tags"
-              @click.stop="goToLieuOnMap(lieu)"
-            >
+            <div v-if="lieu.tags && lieu.tags.length > 0" class="lieu-tags" @click.stop="goToLieuOnMap(lieu)">
               <span
                 v-for="tag in lieu.tags"
                 :key="tag"
@@ -1330,23 +1288,7 @@ img[alt*="Vue"],
   font-weight: 500;
   display: inline-block;
 }
-.tag-button {
-  text-decoration: none; /* Enlève le soulignement */
-  display: inline-block; /* Pour appliquer padding et bordure */
-  padding: 10px 20px; /* Ajuste la taille du bouton */
-  background-color: #4caf50; /* Couleur de fond du bouton */
-  color: white; /* Couleur du texte */
-  border: 2px solid #4caf50; /* Bordure du même ton que le fond */
-  border-radius: 5px; /* Coins arrondis */
-  font-weight: bold; /* Texte en gras */
-  cursor: pointer; /* Curseur main au survol */
-  transition: background-color 0.3s, color 0.3s; /* Animation hover */
-}
 
-.tag-button:hover {
-  background-color: white; /* Inverse les couleurs au survol */
-  color: #4caf50;
-}
 /* Filtre par tag */
 .tag-filter {
   margin: 16px 0;
@@ -1501,21 +1443,6 @@ img[alt*="Vue"],
   display: flex;
   gap: 10px;
   margin-top: 20px;
-}
-
-.tag-link-btn {
-  margin-top: 6px;
-  background: none;
-  border: none;
-  color: #2563eb; /* bleu style lien */
-  cursor: pointer;
-  font-size: 0.9rem;
-  text-decoration: underline;
-  padding: 0;
-}
-
-.tag-link-btn:hover {
-  color: #1d4ed8; /* bleu plus foncé */
 }
 
 .save-btn,
@@ -2165,18 +2092,13 @@ img[alt*="Vue"],
 }
 
 .lieu-item::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(59, 130, 246, 0.1),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
   transition: left 0.5s ease;
 }
 
@@ -2264,30 +2186,30 @@ img[alt*="Vue"],
     margin: 0 auto;
     padding: 20px;
   }
-}
-.tag-manager-btn {
-  bottom: 145px;
-  right: 16px;
-  width: 45px;
-  height: 45px;
-  font-size: 18px;
-}
+}-manager-btn {
+    bottom: 145px;
+    right: 16px;
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
 
-.search-input {
-  font-size: 16px; /* Évite le zoom sur iOS */
-}
+  .search-input {
+    font-size: 16px; /* Évite le zoom sur iOS */
+  }
 
-.tag-filter {
-  padding: 12px;
-}
+  .tag-filter {
+    padding: 12px;
+  }
 
-.tag-filter-options {
-  gap: 4px;
-}
+  .tag-filter-options {
+    gap: 4px;
+  }
 
-.tag-filter-btn {
-  padding: 4px 8px;
-  font-size: 11px;
+  .tag-filter-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
 }
 
 /* Support pour les très petits écrans */
@@ -2330,5 +2252,8 @@ img[alt*="Vue"],
     height: 42px;
     font-size: 16px;
   }
+
+  
+
 }
-</style>
+

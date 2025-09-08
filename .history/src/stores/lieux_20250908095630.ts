@@ -19,7 +19,7 @@ export interface Lieu {
   dateEvenement?: string;
   createdAt: string;
   userId: string; // ✅ Ajout du userId
-  tags?: string[];
+  tags: string[];
 }
 
 interface FirestoreData {
@@ -33,7 +33,7 @@ interface FirestoreData {
   createdAt?: string;
   userId?: string; // ✅ Ajout du userId
   [key: string]: any;
-  tags?: string[];
+  tags: string[];
 }
 
 export const useLieuxStore = defineStore("lieux", () => {

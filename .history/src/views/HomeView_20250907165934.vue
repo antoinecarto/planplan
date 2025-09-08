@@ -9,22 +9,6 @@ const map = ref<any>(null);
 const currentView = ref<"carte" | "liste">("carte");
 const searchQuery = ref("");
 
-// Système de tags
-const availableTags = ref([
-  { name: "Restaurant", color: "#ef4444" },
-  { name: "Musée", color: "#3b82f6" },
-  { name: "Parc", color: "#10b981" },
-  { name: "Monument", color: "#f59e0b" },
-  { name: "Shopping", color: "#8b5cf6" },
-  { name: "Hôtel", color: "#06b6d4" },
-  { name: "Transport", color: "#6b7280" },
-  { name: "Autre", color: "#ec4899" },
-]);
-const selectedTagFilter = ref<string>(""); // Pour le filtre dans la liste
-const showTagManager = ref(false);
-const newTagName = ref("");
-const newTagColor = ref("#3b82f6");
-
 // Formulaire
 const showForm = ref(false);
 const isEditMode = ref(false);
@@ -34,8 +18,7 @@ const formData = ref({
   description: "",
   lat: 0,
   lng: 0,
-  dateEvenement: "",
-  tags: [] as string[], // Nouveau champ pour les tags
+  dateEvecdnement: "",
 });
 let tempMarker: any = null;
 
@@ -62,35 +45,17 @@ const formatDateTime = (dateString: string) =>
     minute: "2-digit",
   });
 
-// Fonction pour obtenir les couleurs des tags
-const getTagColor = (tagName: string) => {
-  const tag = availableTags.value.find((t) => t.name === tagName);
-  return tag ? tag.color : "#6b7280";
-};
-
-// Lieux filtrés avec recherche et tags
+// Lieux filtrés
 const lieuxFiltres = computed(() => {
   let lieux = lieuxStore.lieux;
-
-  // Filtre par recherche
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase().trim();
     lieux = lieux.filter(
       (l) =>
         l.nom.toLowerCase().includes(query) ||
-        (l.description && l.description.toLowerCase().includes(query)) ||
-        (l.tags &&
-          l.tags.some((tag: string) => tag.toLowerCase().includes(query)))
+        (l.description && l.description.toLowerCase().includes(query))
     );
   }
-
-  // Filtre par tag sélectionné
-  if (selectedTagFilter.value) {
-    lieux = lieux.filter(
-      (l) => l.tags && l.tags.includes(selectedTagFilter.value)
-    );
-  }
-
   return lieux.sort((a, b) => {
     const aHasDate = a.dateEvenement?.trim() !== "";
     const bHasDate = b.dateEvenement?.trim() !== "";
@@ -110,47 +75,6 @@ const lieuxFiltres = computed(() => {
       : dateA.getTime() - dateB.getTime();
   });
 });
-
-// Tags utilisés (pour le filtre)
-const usedTags = computed(() => {
-  const tags = new Set<string>();
-  lieuxStore.lieux.forEach((lieu) => {
-    if (lieu.tags) {
-      lieu.tags.forEach((tag: string) => tags.add(tag));
-    }
-  });
-  return Array.from(tags).sort();
-});
-
-// Gestion des tags
-const addNewTag = () => {
-  if (
-    newTagName.value.trim() &&
-    !availableTags.value.find((t) => t.name === newTagName.value.trim())
-  ) {
-    availableTags.value.push({
-      name: newTagName.value.trim(),
-      color: newTagColor.value,
-    });
-    newTagName.value = "";
-    newTagColor.value = "#3b82f6";
-  }
-};
-
-const removeTag = (index: number) => {
-  if (confirm("Êtes-vous sûr de vouloir supprimer ce tag ?")) {
-    availableTags.value.splice(index, 1);
-  }
-};
-
-const toggleTagInForm = (tagName: string) => {
-  const index = formData.value.tags.indexOf(tagName);
-  if (index > -1) {
-    formData.value.tags.splice(index, 1);
-  } else {
-    formData.value.tags.push(tagName);
-  }
-};
 
 // Init
 onMounted(async () => {
@@ -229,32 +153,15 @@ const customIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-L.Marker.prototype.options.icon = L.divIcon({ className: "empty-marker" });
-
-// Ajouter un marker avec tags
+// Ajouter un marker
 const addExistingMarker = (lieu: any) => {
   if (!map.value) return;
   const marker = L.marker([lieu.lat, lieu.lng], { icon: customIcon });
-
-  // Générer les tags HTML
-  const tagsHtml =
-    lieu.tags && lieu.tags.length > 0
-      ? `<div style="margin-bottom:8px;">${lieu.tags
-          .map(
-            (tag: string) =>
-              `<span style="background:${getTagColor(
-                tag
-              )};color:white;padding:2px 6px;border-radius:12px;font-size:10px;margin-right:4px;display:inline-block;">${tag}</span>`
-          )
-          .join("")}</div>`
-      : "";
-
   const popupContent = `
     <div style="min-width:250px;font-family:system-ui;">
-      <h3 style="margin-bottom:8px;color:#1f2937;font-size:16px;">${
+      <h3  style="margin-bottom:8px;color:#1f2937;font-size:16px;">${
         lieu.nom
       }</h3>
-      ${tagsHtml}
       <p style="margin-bottom:8px;color:#6b7280;font-size:13px;line-height:1.4;">${
         lieu.description || ""
       }</p>
@@ -300,7 +207,6 @@ const onMapClick = (e: any) => {
     lat: lat,
     lng: lng,
     dateEvenement: maintenant.toISOString().split("T")[0], // Format YYYY-MM-DD
-    tags: [],
   };
   isEditMode.value = false;
   editingLieuId.value = null;
@@ -388,7 +294,6 @@ const saveNewMarker = async () => {
       lat: formData.value.lat,
       lng: formData.value.lng,
       dateEvenement: formData.value.dateEvenement || undefined,
-      tags: formData.value.tags,
     };
 
     const result = await lieuxStore.updateLieu(editingLieuId.value, updates);
@@ -409,7 +314,6 @@ const saveNewMarker = async () => {
       lng: formData.value.lng,
       dateEnregistrement: new Date().toISOString(),
       dateEvenement: formData.value.dateEvenement || undefined,
-      tags: formData.value.tags,
     };
 
     const result = await lieuxStore.addLieu(nouveauLieu);
@@ -449,7 +353,6 @@ const resetForm = () => {
     lat: 0,
     lng: 0,
     dateEvenement: "",
-    tags: [],
   };
   isEditMode.value = false;
   editingLieuId.value = null;
@@ -481,7 +384,6 @@ const refreshMapMarkers = () => {
     lat: lieu.lat,
     lng: lieu.lng,
     dateEvenement: lieu.dateEvenement || "",
-    tags: lieu.tags || [],
   };
 
   isEditMode.value = true;
@@ -568,7 +470,6 @@ const editLieuFromList = (lieu: any) => {
     lat: lieu.lat,
     lng: lieu.lng,
     dateEvenement: lieu.dateEvenement || "",
-    tags: lieu.tags || [],
   };
 
   isEditMode.value = true;
@@ -586,11 +487,6 @@ const deleteLieuFromList = async (id: string) => {
 // Fonction pour effacer la recherche
 const clearSearch = () => {
   searchQuery.value = "";
-};
-
-// Fonction pour effacer le filtre de tag
-const clearTagFilter = () => {
-  selectedTagFilter.value = "";
 };
 
 // Fonction pour inverser l'ordre de tri
@@ -629,7 +525,7 @@ const toggleSortOrder = () => {
           <div class="loading-spinner">⏳ Chargement...</div>
         </div>
 
-        <!-- Formulaire flottant avec tags -->
+        <!-- Formulaire flottant -->
         <div v-if="showForm" class="form-overlay">
           <div class="form-modal">
             <h3>
@@ -655,36 +551,6 @@ const toggleSortOrder = () => {
                 class="form-textarea"
                 maxlength="500"
               ></textarea>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Tags</label>
-              <div class="tags-selector">
-                <div
-                  v-for="tag in availableTags"
-                  :key="tag.name"
-                  @click="toggleTagInForm(tag.name)"
-                  :class="[
-                    'tag-option',
-                    { selected: formData.tags.includes(tag.name) },
-                  ]"
-                  :style="{
-                    backgroundColor: formData.tags.includes(tag.name)
-                      ? tag.color
-                      : '#f3f4f6',
-                  }"
-                >
-                  {{ tag.name }}
-                </div>
-              </div>
-              <!-- ✅ Bouton discret -->
-              <button
-                @click="showTagManager = true"
-                type="button"
-                class="tag-button"
-              >
-                ➕ Ajouter/Gérer les tags
-              </button>
             </div>
 
             <div class="form-group">
@@ -728,60 +594,9 @@ const toggleSortOrder = () => {
             </div>
           </div>
         </div>
-
-        <!-- Gestionnaire de tags -->
-        <div v-if="showTagManager" class="form-overlay">
-          <div class="form-modal">
-            <h3>🏷️ Gestion des tags</h3>
-
-            <div class="form-group">
-              <label class="form-label">Tags existants</label>
-              <div class="existing-tags">
-                <div
-                  v-for="(tag, index) in availableTags"
-                  :key="tag.name"
-                  class="existing-tag"
-                  :style="{ backgroundColor: tag.color }"
-                >
-                  {{ tag.name }}
-                  <button @click="removeTag(index)" class="tag-remove-btn">
-                    ×
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Ajouter un nouveau tag</label>
-              <div class="new-tag-form">
-                <input
-                  v-model="newTagName"
-                  type="text"
-                  placeholder="Nom du tag"
-                  class="form-input"
-                  maxlength="20"
-                />
-                <input v-model="newTagColor" type="color" class="color-input" />
-                <button
-                  @click="addNewTag"
-                  class="add-tag-btn"
-                  :disabled="!newTagName.trim()"
-                >
-                  ➕
-                </button>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button @click="showTagManager = false" class="save-btn">
-                ✅ Terminé
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <!-- Vue Liste avec filtre par tag -->
+      <!-- Vue Liste -->
       <div v-else class="liste-container">
         <div class="liste-header">
           <h1 class="titre">Mes lieux</h1>
@@ -803,41 +618,6 @@ const toggleSortOrder = () => {
             </button>
           </div>
 
-          <!-- Filtre par tag -->
-          <div v-if="usedTags.length > 0" class="tag-filter">
-            <div class="tag-filter-header">
-              <span class="filter-label">Filtrer par tag :</span>
-              <button
-                v-if="selectedTagFilter"
-                @click="clearTagFilter"
-                class="clear-filter-btn"
-                title="Effacer le filtre"
-              >
-                ❌ Effacer
-              </button>
-            </div>
-            <div class="tag-filter-options">
-              <button
-                v-for="tag in usedTags"
-                :key="tag"
-                @click="
-                  selectedTagFilter = selectedTagFilter === tag ? '' : tag
-                "
-                :class="[
-                  'tag-filter-btn',
-                  { active: selectedTagFilter === tag },
-                ]"
-                :style="{
-                  backgroundColor:
-                    selectedTagFilter === tag ? getTagColor(tag) : '#f3f4f6',
-                  color: selectedTagFilter === tag ? 'white' : '#374151',
-                }"
-              >
-                {{ tag }}
-              </button>
-            </div>
-          </div>
-
           <!-- Barre de recherche -->
           <div class="search-container">
             <div class="search-input-container">
@@ -845,7 +625,7 @@ const toggleSortOrder = () => {
               <input
                 v-model="searchQuery"
                 type="text"
-                placeholder="Rechercher un lieu ou un tag..."
+                placeholder="Rechercher un lieu..."
                 class="search-input"
               />
               <button
@@ -872,35 +652,16 @@ const toggleSortOrder = () => {
           </p>
         </div>
 
-        <div v-else-if="lieuxFiltres.length === 0" class="empty-state">
+        <div
+          v-else-if="lieuxFiltres.length === 0 && searchQuery"
+          class="empty-state"
+        >
           <div class="empty-icon">🔍</div>
           <h3>Aucun résultat</h3>
-          <p v-if="searchQuery && selectedTagFilter">
-            Aucun lieu ne correspond à votre recherche "{{ searchQuery }}" avec
-            le tag "{{ selectedTagFilter }}"
-          </p>
-          <p v-else-if="searchQuery">
-            Aucun lieu ne correspond à votre recherche "{{ searchQuery }}"
-          </p>
-          <p v-else-if="selectedTagFilter">
-            Aucun lieu avec le tag "{{ selectedTagFilter }}"
-          </p>
-          <div class="empty-actions">
-            <button
-              v-if="searchQuery"
-              @click="clearSearch"
-              class="clear-search-btn"
-            >
-              Effacer la recherche
-            </button>
-            <button
-              v-if="selectedTagFilter"
-              @click="clearTagFilter"
-              class="clear-search-btn"
-            >
-              Effacer le filtre
-            </button>
-          </div>
+          <p>Aucun lieu ne correspond à votre recherche "{{ searchQuery }}"</p>
+          <button @click="clearSearch" class="clear-search-btn">
+            Effacer la recherche
+          </button>
         </div>
 
         <div v-else class="lieux-list">
@@ -927,22 +688,6 @@ const toggleSortOrder = () => {
                   🗑️
                 </button>
               </div>
-            </div>
-
-            <!-- Tags du lieu -->
-            <div
-              v-if="lieu.tags && lieu.tags.length > 0"
-              class="lieu-tags"
-              @click.stop="goToLieuOnMap(lieu)"
-            >
-              <span
-                v-for="tag in lieu.tags"
-                :key="tag"
-                class="lieu-tag"
-                :style="{ backgroundColor: getTagColor(tag) }"
-              >
-                {{ tag }}
-              </span>
             </div>
 
             <p
@@ -1139,36 +884,6 @@ img[alt*="Vue"],
   animation: pulse 1.5s infinite;
 }
 
-/* Bouton de gestion des tags */
-.tag-manager-btn {
-  position: absolute;
-  bottom: 80px;
-  right: 20px;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #8b5cf6;
-  color: white;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-  transition: all 0.3s ease;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tag-manager-btn:hover {
-  background: #7c3aed;
-  transform: scale(1.1);
-}
-
-.tag-manager-btn:active {
-  transform: scale(0.95);
-}
-
 @keyframes pulse {
   0% {
     opacity: 1;
@@ -1203,212 +918,6 @@ img[alt*="Vue"],
 .loading-spinner {
   font-size: 16px;
   color: #6b7280;
-}
-
-/* Styles pour les tags */
-.tags-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.tag-option {
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 2px solid transparent;
-  user-select: none;
-}
-
-.tag-option:not(.selected) {
-  color: #374151;
-  border-color: #d1d5db;
-}
-
-.tag-option.selected {
-  color: white;
-  transform: scale(1.05);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.tag-option:hover {
-  transform: scale(1.05);
-}
-
-/* Gestionnaire de tags */
-.existing-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.existing-tag {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 16px;
-  color: white;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.tag-remove-btn {
-  background: rgba(255, 255, 255, 0.3);
-  border: none;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 10px;
-  color: white;
-  transition: background-color 0.2s;
-}
-
-.tag-remove-btn:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.new-tag-form {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.color-input {
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  outline: none;
-}
-
-.add-tag-btn {
-  background: #10b981;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.2s;
-}
-
-.add-tag-btn:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-.add-tag-btn:not(:disabled):hover {
-  background: #059669;
-}
-
-/* Tags dans la liste */
-.lieu-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 8px;
-  cursor: pointer;
-}
-
-.lieu-tag {
-  padding: 2px 8px;
-  border-radius: 12px;
-  color: white;
-  font-size: 11px;
-  font-weight: 500;
-  display: inline-block;
-}
-.tag-button {
-  text-decoration: none; /* Enlève le soulignement */
-  display: inline-block; /* Pour appliquer padding et bordure */
-  padding: 10px 20px; /* Ajuste la taille du bouton */
-  background-color: #4caf50; /* Couleur de fond du bouton */
-  color: white; /* Couleur du texte */
-  border: 2px solid #4caf50; /* Bordure du même ton que le fond */
-  border-radius: 5px; /* Coins arrondis */
-  font-weight: bold; /* Texte en gras */
-  cursor: pointer; /* Curseur main au survol */
-  transition: background-color 0.3s, color 0.3s; /* Animation hover */
-}
-
-.tag-button:hover {
-  background-color: white; /* Inverse les couleurs au survol */
-  color: #4caf50;
-}
-/* Filtre par tag */
-.tag-filter {
-  margin: 16px 0;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-}
-
-.tag-filter-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.filter-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.clear-filter-btn {
-  background: #6b7280;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 11px;
-  transition: background-color 0.2s;
-}
-
-.clear-filter-btn:hover {
-  background: #4b5563;
-}
-
-.tag-filter-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.tag-filter-btn {
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #d1d5db;
-  background: #f3f4f6;
-}
-
-.tag-filter-btn:hover {
-  transform: scale(1.05);
-}
-
-.tag-filter-btn.active {
-  transform: scale(1.05);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  border-color: transparent;
 }
 
 /* Formulaire flottant amélioré */
@@ -1503,21 +1012,6 @@ img[alt*="Vue"],
   margin-top: 20px;
 }
 
-.tag-link-btn {
-  margin-top: 6px;
-  background: none;
-  border: none;
-  color: #2563eb; /* bleu style lien */
-  cursor: pointer;
-  font-size: 0.9rem;
-  text-decoration: underline;
-  padding: 0;
-}
-
-.tag-link-btn:hover {
-  color: #1d4ed8; /* bleu plus foncé */
-}
-
 .save-btn,
 .cancel-btn {
   flex: 1;
@@ -1579,31 +1073,10 @@ img[alt*="Vue"],
   margin-bottom: 4px;
 }
 
-.stats-and-sort {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
 .stats {
   color: #6b7280;
   font-size: 14px;
-}
-
-.sort-btn {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-.sort-btn:hover {
-  background: #e5e7eb;
+  margin-bottom: 16px;
 }
 
 /* Barre de recherche */
@@ -1676,14 +1149,6 @@ img[alt*="Vue"],
   color: #374151;
 }
 
-.empty-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-  margin-top: 16px;
-}
-
 .clear-search-btn {
   background: #3b82f6;
   color: white;
@@ -1692,6 +1157,7 @@ img[alt*="Vue"],
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  margin-top: 16px;
   transition: background-color 0.2s;
 }
 
@@ -1741,48 +1207,6 @@ img[alt*="Vue"],
 
 .lieu-nom:hover {
   color: #3b82f6;
-}
-
-.lieu-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.edit-btn-list,
-.delete-btn-list {
-  border: none;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 10;
-}
-
-.edit-btn-list {
-  background-color: #3b82f6;
-  color: white;
-}
-
-.edit-btn-list:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
-}
-
-.edit-btn-list:not(:disabled):hover {
-  background-color: #2563eb;
-}
-
-.edit-btn-list:not(:disabled):active {
-  background-color: #1d4ed8;
-  transform: scale(0.95);
 }
 
 .lieu-description {
@@ -1967,327 +1391,9 @@ img[alt*="Vue"],
     font-size: 18px;
   }
 
-  .tag-manager-btn {
-    bottom: 140px;
-    right: 12px;
-    width: 42px;
-    height: 42px;
-    font-size: 16px;
-  }
-
-  .lieu-click-indicator {
-    font-size: 10px;
-  }
-
-  .click-arrow {
-    font-size: 12px;
-  }
-
-  .tags-selector {
-    gap: 6px;
-  }
-
-  .tag-option {
-    padding: 4px 8px;
-    font-size: 11px;
-  }
-
-  .lieu-tags {
-    gap: 3px;
-    margin-bottom: 6px;
-  }
-
-  .lieu-tag {
-    font-size: 10px;
-    padding: 2px 6px;
-  }
-
-  .new-tag-form {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .color-input {
-    width: 100%;
-    height: 40px;
-  }
-
-  .stats-and-sort {
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
-  }
-
-  .sort-btn {
-    font-size: 11px;
-    padding: 4px 8px;
-  }
-}
-
-/* Support pour les écrans encore plus petits */
-@media (max-width: 360px) {
-  .form-modal {
-    min-width: 260px;
-    padding: 12px;
-  }
-
-  .location-btn,
-  .tag-manager-btn {
-    width: 38px;
-    height: 38px;
-    font-size: 14px;
-  }
-
-  .tag-manager-btn {
-    bottom: 130px;
-  }
-
-  .location-btn {
-    bottom: 80px;
-  }
-
-  .tag-filter {
-    padding: 8px;
-  }
-
-  .tag-filter-btn {
-    padding: 3px 6px;
-    font-size: 10px;
-  }
-
-  .lieu-item {
-    padding: 12px;
-  }
-
-  .lieu-nom {
-    font-size: 15px;
-  }
-
-  .meta-item {
-    font-size: 10px;
-  }
-}
-
-/* Améliorations pour l'accessibilité */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Mode sombre (si supporté) */
-@media (prefers-color-scheme: dark) {
-  .darkMode {
-    background-color: #1f2937;
-    color: #f9fafb;
-  }
-
-  .liste-container {
-    background-color: #111827;
-  }
-
-  .liste-header {
-    background: #1f2937;
-    border-bottom-color: #374151;
-  }
-
-  .lieu-item {
-    background: #1f2937;
-    border-color: #374151;
-  }
-
-  .lieu-item:hover {
-    border-color: #3b82f6;
-  }
-
   .search-input {
-    background: #374151;
-    border-color: #4b5563;
-    color: #f9fafb;
+    font-size: 16px; /* Évite le zoom sur iOS */
   }
-
-  .search-input:focus {
-    background: #374151;
-  }
-
-  .form-modal {
-    background: #1f2937;
-    color: #f9fafb;
-  }
-
-  .form-input,
-  .form-textarea {
-    background: #374151;
-    border-color: #4b5563;
-    color: #f9fafb;
-  }
-
-  .form-info {
-    background: #374151;
-    color: #9ca3af;
-  }
-
-  .tag-filter {
-    background: #374151;
-    border-color: #4b5563;
-  }
-
-  .tag-filter-btn {
-    background: #4b5563;
-    border-color: #6b7280;
-    color: #f9fafb;
-  }
-}
-
-/* Animation pour les tags */
-@keyframes tagPop {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.tag-option.selected {
-  animation: tagPop 0.3s ease;
-}
-
-/* Effet hover amélioré pour les lieux */
-.lieu-item {
-  position: relative;
-  overflow: hidden;
-}
-
-.lieu-item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(59, 130, 246, 0.1),
-    transparent
-  );
-  transition: left 0.5s ease;
-}
-
-.lieu-item:hover::before {
-  left: 100%;
-}
-
-/* Styles pour les messages de feedback */
-.success-message {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #10b981;
-  color: white;
-  padding: 12px 16px;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  z-index: 3000;
-  animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-/* Focus améliore pour les éléments interactifs */
-.tag-option:focus,
-.tag-filter-btn:focus,
-.nav-button:focus,
-.location-btn:focus,
-.tag-manager-btn:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-/* Amélioration des transitions */
-.lieu-item,
-.tag-option,
-.tag-filter-btn,
-.nav-button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Optimisation des performances pour les listes longues */
-.lieux-list {
-  contain: layout style paint;
-}
-
-.lieu-item {
-  contain: layout style paint;
-  will-change: transform, box-shadow;
-}
-
-/* Support pour les écrans très larges */
-@media (min-width: 1200px) {
-  .form-modal {
-    min-width: 400px;
-    max-width: 500px;
-  }
-
-  .lieux-list {
-    padding: 20px;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  .liste-header {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-}
-.tag-manager-btn {
-  bottom: 145px;
-  right: 16px;
-  width: 45px;
-  height: 45px;
-  font-size: 18px;
-}
-
-.search-input {
-  font-size: 16px; /* Évite le zoom sur iOS */
-}
-
-.tag-filter {
-  padding: 12px;
-}
-
-.tag-filter-options {
-  gap: 4px;
-}
-
-.tag-filter-btn {
-  padding: 4px 8px;
-  font-size: 11px;
 }
 
 /* Support pour les très petits écrans */
@@ -2308,12 +1414,8 @@ img[alt*="Vue"],
     gap: 8px;
   }
 
-  .lieu-actions {
+  .delete-btn-list {
     align-self: flex-end;
-  }
-
-  .delete-btn-list,
-  .edit-btn-list {
     width: 32px;
     height: 32px;
     font-size: 12px;
@@ -2329,6 +1431,14 @@ img[alt*="Vue"],
     width: 42px;
     height: 42px;
     font-size: 16px;
+  }
+
+  .lieu-click-indicator {
+    font-size: 10px;
+  }
+
+  .click-arrow {
+    font-size: 12px;
   }
 }
 </style>

@@ -681,7 +681,7 @@ const toggleSortOrder = () => {
               <button
                 @click="showTagManager = true"
                 type="button"
-                class="tag-button"
+                class="tag-link-btn"
               >
                 ➕ Ajouter/Gérer les tags
               </button>
@@ -1330,23 +1330,7 @@ img[alt*="Vue"],
   font-weight: 500;
   display: inline-block;
 }
-.tag-button {
-  text-decoration: none; /* Enlève le soulignement */
-  display: inline-block; /* Pour appliquer padding et bordure */
-  padding: 10px 20px; /* Ajuste la taille du bouton */
-  background-color: #4caf50; /* Couleur de fond du bouton */
-  color: white; /* Couleur du texte */
-  border: 2px solid #4caf50; /* Bordure du même ton que le fond */
-  border-radius: 5px; /* Coins arrondis */
-  font-weight: bold; /* Texte en gras */
-  cursor: pointer; /* Curseur main au survol */
-  transition: background-color 0.3s, color 0.3s; /* Animation hover */
-}
 
-.tag-button:hover {
-  background-color: white; /* Inverse les couleurs au survol */
-  color: #4caf50;
-}
 /* Filtre par tag */
 .tag-filter {
   margin: 16px 0;

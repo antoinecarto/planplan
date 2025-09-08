@@ -254,6 +254,14 @@ const addExistingMarker = (lieu: any) => {
       <h3 style="margin-bottom:8px;color:#1f2937;font-size:16px;">${
         lieu.nom
       }</h3>
+                    <!-- Bouton pour gérer les tags depuis la popup -->
+              <button
+                @click="showTagManager = true"
+                class="tag-manager-btn"
+                type="button"
+              >
+                🏷️
+              </button>
       ${tagsHtml}
       <p style="margin-bottom:8px;color:#6b7280;font-size:13px;line-height:1.4;">${
         lieu.description || ""
@@ -677,14 +685,6 @@ const toggleSortOrder = () => {
                   {{ tag.name }}
                 </div>
               </div>
-              <!-- ✅ Bouton discret -->
-              <button
-                @click="showTagManager = true"
-                type="button"
-                class="tag-button"
-              >
-                ➕ Ajouter/Gérer les tags
-              </button>
             </div>
 
             <div class="form-group">
@@ -1330,23 +1330,7 @@ img[alt*="Vue"],
   font-weight: 500;
   display: inline-block;
 }
-.tag-button {
-  text-decoration: none; /* Enlève le soulignement */
-  display: inline-block; /* Pour appliquer padding et bordure */
-  padding: 10px 20px; /* Ajuste la taille du bouton */
-  background-color: #4caf50; /* Couleur de fond du bouton */
-  color: white; /* Couleur du texte */
-  border: 2px solid #4caf50; /* Bordure du même ton que le fond */
-  border-radius: 5px; /* Coins arrondis */
-  font-weight: bold; /* Texte en gras */
-  cursor: pointer; /* Curseur main au survol */
-  transition: background-color 0.3s, color 0.3s; /* Animation hover */
-}
 
-.tag-button:hover {
-  background-color: white; /* Inverse les couleurs au survol */
-  color: #4caf50;
-}
 /* Filtre par tag */
 .tag-filter {
   margin: 16px 0;
@@ -1501,21 +1485,6 @@ img[alt*="Vue"],
   display: flex;
   gap: 10px;
   margin-top: 20px;
-}
-
-.tag-link-btn {
-  margin-top: 6px;
-  background: none;
-  border: none;
-  color: #2563eb; /* bleu style lien */
-  cursor: pointer;
-  font-size: 0.9rem;
-  text-decoration: underline;
-  padding: 0;
-}
-
-.tag-link-btn:hover {
-  color: #1d4ed8; /* bleu plus foncé */
 }
 
 .save-btn,
