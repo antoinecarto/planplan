@@ -182,7 +182,7 @@ const addLieu = async (
       }
 
       const lieuMisAJour = { ...lieux.value[index], ...updates };
-      await saveToFirestore(lieuMisAJour);
+      await saveToFirestore(lieuMisAJour, id);
 
       lieux.value[index] = lieuMisAJour;
       console.log("Lieu mis à jour:", lieuMisAJour);
