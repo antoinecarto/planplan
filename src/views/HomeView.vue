@@ -750,12 +750,15 @@ const toggleSortOrder = () => {
 
 <template>
   <div class="app-container darkMode">
-    <button
-      @click="logout"
-      class="w-full bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 text-white py-3 font-semibold hover:brightness-110 transition-all shadow-md"
-    >
-      Se déconnecter
-    </button>
+      <header class="header">
+      <button
+        @click="logout"
+      class="w-full bg-slate-600 text-white py-3 font-semibold hover:brightness-110 transition-all shadow-md"
+      >
+        Se déconnecter
+      </button>
+    </header>
+
     <!-- Message d'erreur global -->
     <div v-if="lieuxStore.error" class="error-banner">
       ⚠️ {{ lieuxStore.error }}
@@ -1916,6 +1919,18 @@ img[alt*="Vue"],
   gap: 8px;
   flex-shrink: 0;
 }
+
+.logout-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 3001; /* Plus élevé que .form-overlay */
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
 
 .edit-btn-list,
 .delete-btn-list {
