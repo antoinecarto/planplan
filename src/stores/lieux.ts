@@ -99,42 +99,64 @@ export const useLieuxStore = defineStore("lieux", () => {
     }
   };
 
-  const addLieu = async (
-    nouveLieu: Omit<Lieu, "id" | "createdAt" | "userId">
-  ) => {
-    if (!currentUserId.value) {
-      error.value = "Utilisateur non connecté";
-      return;
+const addLieu = async (
+  nouveLieu: Omit<Lieu, "id" | "createdAt" | "userId">
+) => {
+  if (!currentUserId.value) {
+    error.value = "Utilisateur non connecté";
+    return;
+  }
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const lieuComplet: Omit<Lieu, "id"> = {
+      ...nouveLieu,
+      createdAt: new Date().toISOString(),
+      userId: currentUserId.value,
+    };
+
+    // Vérifie si le lieu existe déjà AVANT de l'ajouter
+    const existe = lieux.value.some(
+      lieu =>
+        lieu.nom === lieuComplet.nom &&
+        lieu.lat === lieuComplet.lat &&
+        lieu.lng === lieuComplet.lng
+    );
+
+    if (existe) {
+      console.warn("Lieu déjà existant, non ajouté :", lieuComplet);
+      return null;
     }
 
-    loading.value = true;
-    error.value = null;
+    const id = (await saveToFirestore(lieuComplet)) as string;
 
-    try {
-      const lieuComplet: Omit<Lieu, "id"> = {
-        ...nouveLieu,
-        createdAt: new Date().toISOString(),
-        userId: currentUserId.value, // ✅ Ajouter l'userId
-      };
+    const lieuAvecId: Lieu = {
+      ...lieuComplet,
+      id,
+    };
 
-      const id = (await saveToFirestore(lieuComplet)) as string;
+    lieux.value.push(lieuAvecId);
 
-      const lieuAvecId: Lieu = {
-        ...lieuComplet,
-        id,
-      };
+    // Nettoyage des doublons après ajout
+    lieux.value = Array.from(
+      new Map(
+        lieux.value.map(lieu => [`${lieu.nom}-${lieu.lat}-${lieu.lng}`, lieu])
+      ).values()
+    );
 
-      lieux.value.push(lieuAvecId);
-      console.log("Nouveau lieu ajouté:", lieuAvecId);
-      return lieuAvecId;
-    } catch (err: any) {
-      error.value = err.message;
-      console.error("Erreur ajout lieu:", err);
-      throw err;
-    } finally {
-      loading.value = false;
-    }
-  };
+    console.log("Nouveau lieu ajouté:", lieuAvecId);
+    return lieuAvecId;
+  } catch (err: any) {
+    error.value = err.message;
+    console.error("Erreur ajout lieu:", err);
+    throw err;
+  } finally {
+    loading.value = false;
+  }
+};
+
 
   const updateLieu = async (
     id: string,
