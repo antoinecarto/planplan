@@ -606,7 +606,7 @@ onMounted(async () => {
               <label class="form-label">Tags</label>
               <div class="tags-selector">
                 <div
-                  v-for="tag in lieuxStore.tags"
+                  v-for="tag in availableTags"
                   :key="tag.name"
                   @click="toggleTagInForm(tag.name)"
                   :class="[
@@ -683,13 +683,13 @@ onMounted(async () => {
               <label class="form-label">Tags existants</label>
               <div class="existing-tags">
                 <div
-                  v-for="(tag, index) in lieuxStore.tags"
+                  v-for="(tag, index) in availableTags"
                   :key="tag.name"
                   class="existing-tag"
                   :style="{ backgroundColor: tag.color }"
                 >
                   {{ tag.name }}
-                  <button @click="removeTag(tag.name)" class="tag-remove-btn">
+                  <button @click="removeTag(index)" class="tag-remove-btn">
                     ×
                   </button>
                 </div>
@@ -749,7 +749,7 @@ onMounted(async () => {
           </div>
 
           <!-- Filtre par tag -->
-          <div v-if="lieuxStore.usedTags.length > 0" class="tag-filter">
+          <div v-if="usedTags.length > 0" class="tag-filter">
             <div class="tag-filter-header">
               <span class="filter-label">Filtrer par tag :</span>
               <button
@@ -763,7 +763,7 @@ onMounted(async () => {
             </div>
             <div class="tag-filter-options">
               <button
-                v-for="tag in lieuxStore.usedTags"
+                v-for="tag in usedTags"
                 :key="tag"
                 @click="
                   selectedTagFilter = selectedTagFilter === tag ? '' : tag
@@ -774,9 +774,7 @@ onMounted(async () => {
                 ]"
                 :style="{
                   backgroundColor:
-                    selectedTagFilter === tag
-                      ? lieuxStore.getTagColor(tag)
-                      : '#f3f4f6',
+                    selectedTagFilter === tag ? getTagColor(tag) : '#f3f4f6',
                   color: selectedTagFilter === tag ? 'white' : '#374151',
                 }"
               >
@@ -889,7 +887,7 @@ onMounted(async () => {
                 v-for="tag in lieu.tags"
                 :key="tag"
                 class="lieu-tag"
-                :style="{ backgroundColor: lieuxStore.getTagColor(tag) }"
+                :style="{ backgroundColor: getTagColor(tag) }"
               >
                 {{ tag }}
               </span>

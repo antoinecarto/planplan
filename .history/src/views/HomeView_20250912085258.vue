@@ -889,7 +889,7 @@ onMounted(async () => {
                 v-for="tag in lieu.tags"
                 :key="tag"
                 class="lieu-tag"
-                :style="{ backgroundColor: lieuxStore.getTagColor(tag) }"
+                :style="{ backgroundColor: getTagColor(tag) }"
               >
                 {{ tag }}
               </span>
