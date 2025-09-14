@@ -493,6 +493,38 @@ const goToLieuOnMap = (lieu: any) => {
   }, 100);
 };
 
+// Fonctions pour la liste
+const editLieuFromList = (lieu: any) => {
+  console.log("Édition du lieu:", lieu); // Debug
+
+  // S'assurer que tous les champs sont correctement copiés
+  formData.value = {
+    nom: lieu.nom || "",
+    description: lieu.description || "",
+    lat: lieu.lat || 0,
+    lng: lieu.lng || 0,
+    dateEvenement: lieu.dateEvenement || "",
+    tags: Array.isArray(lieu.tags) ? [...lieu.tags] : [],
+  };
+
+  // Activer le mode édition
+  isEditMode.value = true;
+  editingLieuId.value = lieu.id;
+
+  // Basculer vers la vue carte ET afficher le formulaire
+  currentView.value = "carte";
+
+  // Utiliser nextTick pour s'assurer que la vue carte est rendue
+  nextTick(() => {
+    showForm.value = true;
+
+    // Optionnel : centrer la carte sur le lieu à éditer
+    if (map.value && lieu.lat && lieu.lng) {
+      map.value.setView([lieu.lat, lieu.lng], 16);
+    }
+  });
+};
+
 const deleteLieuFromList = async (id: string) => {
   if (confirm("Êtes-vous sûr de vouloir supprimer ce lieu ?")) {
     await lieuxStore.deleteLieu(id);
@@ -844,6 +876,14 @@ onMounted(async () => {
                 {{ lieu.nom }}
               </h3>
               <div class="lieu-actions">
+                <!-- <button
+                  @click.stop="editLieuFromList(lieu)"
+                  class="edit-btn-list"
+                  :disabled="lieuxStore.loading"
+                  title="Modifier ce lieu"
+                >
+                  ✏️
+                </button> -->
                 <button
                   @click.stop="deleteLieuFromList(lieu.id)"
                   class="delete-btn-list"

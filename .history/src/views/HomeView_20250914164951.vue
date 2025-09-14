@@ -845,6 +845,14 @@ onMounted(async () => {
               </h3>
               <div class="lieu-actions">
                 <button
+                  @click.stop="editLieuFromList(lieu)"
+                  class="edit-btn-list"
+                  :disabled="lieuxStore.loading"
+                  title="Modifier ce lieu"
+                >
+                  ✏️
+                </button>
+                <button
                   @click.stop="deleteLieuFromList(lieu.id)"
                   class="delete-btn-list"
                   :disabled="lieuxStore.loading"
